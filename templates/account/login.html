@@ -1,0 +1,118 @@
+{% extends "account/base.html" %}
+{% load static i18n %}
+{% block head_title %}
+  {% trans "Sign In" %}
+{% endblock head_title %}
+{% block content %}
+  <div class="p-4">
+    <div class="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700">
+      <section class="bg-gray-50 dark:bg-gray-800">
+        <div class="flex flex-col items-center justify-center mx-auto md:h-screen lg:py-0">
+          <div class="mb-10">
+            <button id="theme-toggle"
+                    type="button"
+                    class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5">
+              <svg id="theme-toggle-dark-icon"
+                   class="hidden w-5 h-5"
+                   fill="currentColor"
+                   viewBox="0 0 20 20"
+                   xmlns="http://www.w3.org/2000/svg">
+                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+              </svg>
+              <svg id="theme-toggle-light-icon"
+                   class="hidden w-5 h-5"
+                   fill="currentColor"
+                   viewBox="0 0 20 20"
+                   xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd">
+                </path>
+              </svg>
+            </button>
+          </div>
+          <div class="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
+            <div class="p-6 space-y-4 md:space-y-6 sm:p-8">
+              <h1 class="text-xl font-bold leading-tight tracking-tight text-davysGrey-100 md:text-2xl dark:text-white">
+                {% trans "Sign In" %}
+              </h1>
+              {% if socialaccount_providers %}
+                <p>
+                  {% blocktrans with site.name as site_name %}Please sign in with one
+                    of your existing third party accounts. Or, <a href="{{ signup_url }}">sign up</a>
+                    for a {{ site_name }} account and sign in below:{% endblocktrans %}
+                </p>
+                <div class="socialaccount_ballot">
+                  <ul class="socialaccount_providers">
+                    {% include "socialaccount/snippets/provider_list.html" with process="login" %}
+                  </ul>
+                  <div class="login-or">{% trans "or" %}</div>
+                </div>
+                {% include "socialaccount/snippets/login_extra.html" %}
+              {% else %}
+                {% comment %} <p>
+                    {% blocktrans %}If you have not created an account yet, then please
+                      <a href="{{ signup_url }}">sign up</a> first.{% endblocktrans %}
+                </p> {% endcomment %}
+              {% endif %}
+              {% if form.errors %}
+                {% for field in form %}
+                  {% for error in field.errors %}
+                    <div class="p-4 mb-4 text-sm text-red-600 bg-green-100 rounded-lg dark:bg-green-200 dark:text-red-400">
+                      <strong>{{ error|escape }}</strong>
+                    </div>
+                  {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                  <div class="p-4 mb-4 text-sm text-red-700 rounded-lg dark:text-red-400">
+                    <strong>{{ error|escape }}</strong>
+                  </div>
+                {% endfor %}
+              {% endif %}
+              <form class="login space-y-4 md:space-y-6"
+                    method="post"
+                    action="{% url 'account_login' %}">
+                {% csrf_token %}
+                <div>
+                  <label for="id_login"
+                         class="block mb-2 text-sm font-medium text-davysGrey-100 dark:text-white">
+                         {% trans "Username" %}
+                  </label>
+                  {{ form.login }}
+                </div>
+                <div>
+                  <label for="id_password"
+                         class="block mb-2 text-sm font-medium text-davysGrey-100 dark:text-white">{% trans "Password" %}</label>
+                  {{ form.password }}
+                </div>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-start">
+                    <div class="flex items-center h-5">
+                      <input id="id_remember"
+                             aria-describedby="remember"
+                             name="remember"
+                             type="checkbox"
+                             class="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-blue-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600 dark:ring-offset-gray-800" />
+                    </div>
+                    <div class="ml-3 text-sm">
+                      <label for="id_remember" class="text-gray-500 dark:text-gray-300">{% trans "Remember me" %}</label>
+                    </div>
+                  </div>
+                  <a href="{% url 'account_reset_password' %}"
+                     class="button secondaryAction text-sm font-medium text-davysGrey-100 hover:underline dark:text-gray-50">{% trans "Forgot your password?" %}</a>
+                </div>
+                {% if redirect_field_value %}
+                  <input type="hidden"
+                         name="{{ redirect_field_name }}"
+                         value="{{ redirect_field_value }}" />
+                {% endif %}
+                <button type="submit"
+                        class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+                  {% trans "Login" %}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+{% endblock content %}

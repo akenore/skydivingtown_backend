@@ -1,0 +1,72 @@
+{% load static i18n %}
+<style>  
+     body {
+          background-color: transparent;
+     }
+     
+     p {
+          font-size: 13px;
+     }
+     
+     .logo {
+          text-align: center;
+     }
+     
+     .footer {
+          text-align: center;
+          padding-top: 60px
+     }
+     
+     .inline-address {
+          display: inline-block;
+          margin-right: 20px;
+     }
+</style>
+<div class="logo">
+     <img src="https://res.cloudinary.com/dp8abbwj3/image/upload/f_auto,fl_awebp/v1721404249/logo_v9c2ey.png"
+          srcset="https://res.cloudinary.com/dp8abbwj3/image/upload/f_auto,fl_awebp/v1721404249/logo_v9c2ey.png 1x,
+                  https://res.cloudinary.com/dp8abbwj3/image/upload/c_scale,w_310/v1721404249/logo_v9c2ey.png 2x"
+          width="155"
+          height="50"
+          alt="Logo"
+          loading="lazy" />
+</div>
+<div>
+     <p>{% translate "Your discount has been successfully applied. Please find the details below" %}:</p>
+     <p>
+          {% translate "Request details" %}:
+          <ul>
+               <li>
+                    <b>{% translate "Discount Amount" %}</b>: {{ discount }}%
+               </li>
+               <li>
+                    <b>{% translate "Reference" %}</b>: {{ ref }}
+               </li>
+          </ul>
+     </p>
+     <p>{% translate "Use this reference when subscribing to the event to receive a discount" %}</p>
+     <p>{% translate "Thank you for your continued support!" %}</p>
+     <p>
+          {% translate "Sincerely" %},
+          <br />
+          {% translate "Auto message Skydiving Town" %}
+     </p>
+     <br />
+     <div>
+          <address class="inline-address">
+               <small>
+                    +(xxx) xx xxx xxx
+                    <br />
+                    contact@skydivingtown.com
+                    <br />
+                    www.skydivingtown.com
+               </small>
+          </address>
+     </div>
+</div>
+<div class="footer">
+     <small>{% translate "This email is an automatic message." %}
+          <br />
+          {% translate "You are receiving this e-mail because you are a patenaire of the Skydiving Town." %}
+     </small>
+</div>

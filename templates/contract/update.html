@@ -1,0 +1,73 @@
+{% extends "secure/components/base.html" %}
+{% load static i18n %}
+{% block title %}
+     {% translate "Update Company" %}
+{% endblock title %}
+{% block nav %}
+     {% include "secure/components/header.html" %}
+{% endblock nav %}
+{% block aside %}
+     {% include "secure/components/sidebar.html" %}
+{% endblock aside %}
+{% block body %}
+     <div class="md:p-4 sm:ml-64">
+          <div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10 dark:text-gray-300">
+               <div class=" overflow-x-auto shadow-md sm:rounded-lg p-8">
+                    <div class="mb-8">
+                         <h1 class="font-semibold text-2xl text-indigo-900 dark:text-indigo-500 mb-5">Company data</h1>
+                         <div class="grid grid-cols-1 md:grid-cols-2">
+                              <div>
+                                   <span class="font-semibold">{% translate "Ref code" %}</span>: {{ object.ref }}
+                              </div>
+                              <div>
+                                   <span class="font-semibold">{% translate "Email" %}</span>: {{ object.email }}
+                              </div>
+                              <div>
+                                   <span class="font-semibold">{% translate "Name" %}</span>: {{ object.name }}
+                              </div>
+                              <div>
+                                   <span class="font-semibold">{% translate "Phone" %}</span>: {{ object.phone }}
+                              </div>
+                         </div>
+                    </div>
+                    <hr class="py-5" />
+                    <div class="flex justify-center ">
+                         <form method="post" class="md:w-1/2">
+                              {% csrf_token %}
+                              <div class="mb-5">
+                                   <label for="{{ form.discount.id_for_label }}"
+                                          class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        {{ form.discount.label }}
+                                   </label>
+                                   {{ form.discount }}
+                                   {% if form.discount.errors %}<div class="text-red-600">{{ form.discount.errors }}</div>{% endif %}
+                              </div>
+                              {% if object.valid %}
+                                   <div class="p-4 text-sm text-gray-800 rounded-lg bg-gray-50 dark:bg-gray-800 dark:text-gray-300"
+                                        role="alert">
+                                        <span class="font-medium">{% translate "Notes" %}!</span> {% translate "Company Already Verified" %}
+                                   </div>
+                              {% else %}
+                                   <div class="mb-5">
+                                        <div class="flex items-center mb-4">
+                                             {{ form.valid }}
+                                             <label for="{{ form.valid.id_for_label }}"
+                                                    class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">
+                                                  {% translate "Company Validation Check" %}
+                                             </label>
+                                        </div>
+                                        {% if form.valid.errors %}<div class="text-red-600">{{ form.valid.errors }}</div>{% endif %}
+                                   </div>
+                              {% endif %}
+                              <div class="flex justify-center pt-8">
+                                   <button type="submit"
+                                           class="w-2/4 text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">
+                                        Update
+                                   </button>
+                              </div>
+                         </form>
+                    </div>
+               </div>
+          </div>
+     </div>
+{% endblock body %}

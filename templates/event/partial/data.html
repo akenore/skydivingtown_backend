@@ -1,0 +1,29 @@
+{% load i18n %}
+{% for data in object_list %}
+     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+          <td class="w-4 p-4">
+               <div class="flex items-center">{{ data.published|date:'d/m/Y' }}</div>
+          </td>
+          <th scope="row"
+              class="flex items-center px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+               <div class="ps-3">
+                    <div class="text-base font-semibold">{{ data.name }}</div>
+               </div>
+          </th>
+          <td class="px-6 py-4">{{ data.amount }}&nbsp;TND</td>
+          <td class="px-6 py-4">
+               <a href="{% url 'event' data.pk %}"
+                  class="font-medium text-blue-600 dark:text-blue-500 hover:underline mr-5">{% translate "Subscribers list" %}</a>
+          </td>
+          <td class="px-6 py-4">
+               <a href="{% url 'update_event' data.id %}"
+                  class="font-medium text-blue-600 dark:text-blue-500 hover:underline mr-5">{% translate "Update" %}</a>
+               {% comment %} <a href="#" type="button" data-modal-target="remove{{ data.id }}" data-modal-show="remove{{ data.id }}" class="font-medium text-red-600 dark:text-red-500 hover:underline">{% translate "Remove" %}</a>   {% endcomment %}
+          </td>
+     </tr>
+     {% comment %} {% include "event/partial/delete_model.html" %} {% endcomment %}
+{% empty %}
+     <tr>
+          <td colspan="5" class="text-center py-4">{% translate "No results found" %}</td>
+     </tr>
+{% endfor %}

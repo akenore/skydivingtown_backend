@@ -1,0 +1,16 @@
+{% extends "secure/components/base.html" %}
+{% load static i18n %}
+{% block title %}
+     {% translate "Dashboard" %}
+{% endblock title %}
+{% block nav %}
+     {% include "secure/components/header.html" %}
+{% endblock nav %}
+{% block aside %}
+     {% include "secure/components/sidebar.html" %}
+{% endblock aside %}
+{% block body %}
+     <div class="md:p-4 sm:ml-64">
+          <div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10 dark:text-gray-300">Hello</div>
+     </div>
+{% endblock body %}

@@ -1,0 +1,115 @@
+{% extends "secure/components/base.html" %}
+{% load static i18n %}
+{% block title %}
+     {% if object %}
+          {% translate "Update event" %}
+     {% else %}
+          {% translate "Add event" %}
+     {% endif %}
+{% endblock title %}
+{% block nav %}
+     {% include "secure/components/header.html" %}
+{% endblock nav %}
+{% block aside %}
+     {% include "secure/components/sidebar.html" %}
+{% endblock aside %}
+{% block body %}
+     <div class="md:p-4 sm:ml-64">
+          <div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10 dark:text-gray-300">
+               <div class="shadow-md sm:rounded-lg p-8">
+                    <form method="post">
+                         {% csrf_token %}
+                         {% for field in form %}
+                              <div class="mb-4">
+                                   <label for="{{ field.id_for_label }}"
+                                          class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        {{ field.label }}
+                                   </label>
+                                   {{ field }}
+                                   {% if field.errors %}
+                                        <div class="text-red-500">
+                                             {% for error in field.errors %}<strong>{{ error|escape }}</strong>{% endfor %}
+                                        </div>
+                                   {% endif %}
+                              </div>
+                         {% endfor %}
+                         <h3 class="text-lg font-medium text-gray-900 dark:text-white">{% translate "Event Dates" %}</h3>
+                         <div id="event-dates">
+                              {{ eventdate_formset.management_form }}
+                              {% for form in eventdate_formset %}
+                                   <div class="flex justify-between mb-4 p-4 border border-gray-300 rounded-lg event-date-form">
+                                        {% for field in form %}
+                                             <div class="space-x-5 mb-2">
+                                                  <label for="{{ field.id_for_label }}"
+                                                         class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                                       {{ field.label }}
+                                                  </label>
+                                                  {{ field }}
+                                                  {% if field.errors %}
+                                                       <div class="font-medium text-red-600 dark:text-red-700">
+                                                            {% for error in field.errors %}<strong>{{ error|escape }}</strong>{% endfor %}
+                                                       </div>
+                                                  {% endif %}
+                                             </div>
+                                        {% endfor %}
+                                        <button type="button"
+                                                class="remove-event-date font-medium text-red-600 dark:text-red-700 hover:underline">
+                                             {% translate "Remove" %}
+                                        </button>
+                                   </div>
+                              {% endfor %}
+                         </div>
+                         <button type="button"
+                                 id="add-event-date"
+                                 class="px-3 py-2 text-xs font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                              {% translate "Add event date" %}
+                         </button>
+                         <div class="flex justify-center pt-8">
+                              <button class="w-2/4 text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2"
+                                      type="submit">
+                                   {% if object %}
+                                        {% translate "Update" %}
+                                   {% else %}
+                                        {% translate "Add" %}
+                                   {% endif %}
+                              </button>
+                         </div>
+                    </form>
+               </div>
+          </div>
+     </div>
+{% endblock body %}
+{% block scripts %}
+<script>
+     document.getElementById('add-event-date').addEventListener('click', function() {
+         const eventDatesDiv = document.getElementById('event-dates');
+         const totalForms = document.getElementById('id_eventdate_set-TOTAL_FORMS');
+         const currentFormCount = eventDatesDiv.querySelectorAll('.event-date-form').length;
+         const newForm = eventDatesDiv.querySelector('.event-date-form').cloneNode(true);
+ 
+         newForm.querySelectorAll('input, select, textarea').forEach((input) => {
+             const name = input.name.replace(`-${currentFormCount - 1}-`, `-${currentFormCount}-`);
+             const id = input.id.replace(`-${currentFormCount - 1}-`, `-${currentFormCount}-`);
+             input.name = name;
+             input.id = id;
+             input.value = '';
+         });
+ 
+         newForm.querySelector('.remove-event-date').addEventListener('click', function() {
+             newForm.remove();
+             totalForms.value = eventDatesDiv.querySelectorAll('.event-date-form').length;
+         });
+ 
+         eventDatesDiv.appendChild(newForm);
+         totalForms.value = parseInt(totalForms.value) + 1;
+     });
+ 
+     document.querySelectorAll('.remove-event-date').forEach(button => {
+         button.addEventListener('click', function() {
+             button.closest('.event-date-form').remove();
+             const totalForms = document.getElementById('id_eventdate_set-TOTAL_FORMS');
+             totalForms.value = document.getElementById('event-dates').querySelectorAll('.event-date-form').length;
+         });
+     });
+     </script>
+{% endblock scripts %}

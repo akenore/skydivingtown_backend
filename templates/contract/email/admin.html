@@ -1,0 +1,75 @@
+{% load static i18n %}
+<style>  
+     body {
+          background-color: transparent;
+     }
+     
+     p {
+          font-size: 13px;
+     }
+     
+     .logo {
+          text-align: center;
+     }
+     
+     .footer {
+          text-align: center;
+          padding-top: 60px
+     }
+     
+     .inline-address {
+          display: inline-block;
+          margin-right: 20px;
+     }
+</style>
+<div class="logo">
+     {% comment %} <img src="{{ site_url }}static/src/img/logo.png" alt="logo strakon" width="179px" height="44px"/> {% endcomment %}
+</div>
+<div>
+     <p>{% translate "A new company has been registered. Please review the details below" %}:</p>
+     
+     <p>
+         {% translate "Request details" %}:
+          <ul>
+               <li>
+                    <b>{% translate "Name" %}</b>: {{ name }}
+               </li>
+               <li>
+                    <b>Email</b>: {{ email }}
+               </li>
+               <li>
+                    <b>{% translate "Phone" %}</b>: {{ phone }}
+               </li>
+               <li>
+                    <b>{% translate "Ref" %}</b>: {{ ref }}
+               </li>
+          </ul>
+          <p>
+               {% translate "You can check the details of the request" %} <a href='#' target='_blank'>{% translate "here" %}</a>.
+          </p>
+     </p>
+     <p>{% translate "Thank you for your prompt attention to this request." %}</p>
+     <p>
+          {% translate "Sincerely" %},
+          <br/>
+          {% translate "Auto message Skydiving Town" %}
+     </p>
+     <br/>
+     <div>
+          <address class="inline-address">
+               <small>
+                    +(xxx) xx xxx xxx
+                    <br/>
+                    contact@skydivingtown.com
+                    <br/>
+                    www.skydivingtown.com
+               </small>
+          </address>
+     </div>
+</div>
+<div class="footer">
+     <small>{% translate "This email is an automatic message." %}
+          <br/>
+          {% translate "You are receiving this e-mail because you are a member of the Skydiving Town support team." %}
+     </small>
+</div>

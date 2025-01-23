@@ -1,0 +1,14 @@
+
+Django
+django-allauth
+django-autoslug
+django-cors-headers
+django-countries
+django-storages
+django-tinymce
+graphene-django
+pillow
+python-decouple
+pyuca
+s3transfer
+sorl-thumbnail
