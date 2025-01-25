@@ -184,8 +184,7 @@ MESSAGE_TAGS = {
 }
 
 TINYMCE_API = config('TINYMCE_API')
-TINYMCE_JS_URL = f'https://cdn.tiny.cloud/1/{
-    TINYMCE_API}/tinymce/7/tinymce.min.js'
+TINYMCE_JS_URL = f'https://cdn.tiny.cloud/1/{TINYMCE_API}/tinymce/7/tinymce.min.js'
 
 TINYMCE_DEFAULT_CONFIG = {
     "theme": "silver",
