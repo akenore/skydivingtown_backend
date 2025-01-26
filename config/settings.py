@@ -7,9 +7,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('SECRET_KEY')
 
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["restapi.skydivingtown.com", "127.0.0.1"]
 
 
 # Application definition
@@ -113,42 +113,44 @@ LANGUAGES = (
 
 STATIC_URL = 'static/'
 MEDIA_URL = '/shared/'
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-]
 
-CLOUDFLARE_R2_BUCKET = config("CLOUDFLARE_R2_BUCKET")
-CLOUDFLARE_R2_BUCKET_ENDPOINT = config("CLOUDFLARE_R2_BUCKET_ENDPOINT")
-CLOUDFLARE_R2_ACCESS_KEY = config("CLOUDFLARE_R2_ACCESS_KEY")
-CLOUDFLARE_R2_SECRET_KEY = config("CLOUDFLARE_R2_SECRET_KEY")
 
-CLOUDFLARE_R2_CONFIG_OPTIONS = {
-    "bucket_name": config("CLOUDFLARE_R2_BUCKET"),
-    "default_acl": "public-read",  # or "private"
-    "signature_version": "s3v4",
-    "endpoint_url": config("CLOUDFLARE_R2_BUCKET_ENDPOINT"),
-    "access_key": config("CLOUDFLARE_R2_ACCESS_KEY"),
-    "secret_key": config("CLOUDFLARE_R2_SECRET_KEY"),
-}
+# CLOUDFLARE_R2_BUCKET = config("CLOUDFLARE_R2_BUCKET")
+# CLOUDFLARE_R2_BUCKET_ENDPOINT = config("CLOUDFLARE_R2_BUCKET_ENDPOINT")
+# CLOUDFLARE_R2_ACCESS_KEY = config("CLOUDFLARE_R2_ACCESS_KEY")
+# CLOUDFLARE_R2_SECRET_KEY = config("CLOUDFLARE_R2_SECRET_KEY")
 
-STORAGES = {
-    "default": {
-        "BACKEND": "helpers.cloudflare.storages.MediaFileStorage",
-        "OPTIONS": CLOUDFLARE_R2_CONFIG_OPTIONS,
-    },
-    "staticfiles": {
-        "BACKEND": "helpers.cloudflare.storages.StaticFileStorage",
-        "OPTIONS": CLOUDFLARE_R2_CONFIG_OPTIONS,
-    },
-}
+# CLOUDFLARE_R2_CONFIG_OPTIONS = {
+#     "bucket_name": config("CLOUDFLARE_R2_BUCKET"),
+#     "default_acl": "public-read",  # or "private"
+#     "signature_version": "s3v4",
+#     "endpoint_url": config("CLOUDFLARE_R2_BUCKET_ENDPOINT"),
+#     "access_key": config("CLOUDFLARE_R2_ACCESS_KEY"),
+#     "secret_key": config("CLOUDFLARE_R2_SECRET_KEY"),
+# }
+
+# STORAGES = {
+#     "default": {
+#         "BACKEND": "helpers.cloudflare.storages.MediaFileStorage",
+#         "OPTIONS": CLOUDFLARE_R2_CONFIG_OPTIONS,
+#     },
+#     "staticfiles": {
+#         "BACKEND": "helpers.cloudflare.storages.StaticFileStorage",
+#         "OPTIONS": CLOUDFLARE_R2_CONFIG_OPTIONS,
+#     },
+# }
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    STATICFILES_DIRS = [
+        BASE_DIR / 'static',
+    ]
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    STATIC_ROOT = BASE_DIR / 'static'
 
 # EMAIL_HOST = config('EMAIL_HOST', default='localhost')
 # EMAIL_PORT = config('EMAIL_PORT', cast=int)
@@ -184,7 +186,8 @@ MESSAGE_TAGS = {
 }
 
 TINYMCE_API = config('TINYMCE_API')
-TINYMCE_JS_URL = f'https://cdn.tiny.cloud/1/{TINYMCE_API}/tinymce/7/tinymce.min.js'
+TINYMCE_JS_URL = f'https://cdn.tiny.cloud/1/{
+    TINYMCE_API}/tinymce/7/tinymce.min.js'
 
 TINYMCE_DEFAULT_CONFIG = {
     "theme": "silver",
