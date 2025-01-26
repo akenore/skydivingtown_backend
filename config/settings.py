@@ -209,4 +209,6 @@ GRAPHENE = {
 }
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "https://www.skydivingtown.com",
+    "https://skydivingtown.com",
 ]
