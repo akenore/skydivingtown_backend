@@ -1,5 +1,6 @@
 import graphene
 from graphene_django import DjangoObjectType
+from django.db.models import Count, F
 from event.models import Event, Subscriber, EventDate, EventOption
 from django_countries import countries
 
