@@ -3,36 +3,43 @@ from graphene_django import DjangoObjectType
 from event.models import Event, Subscriber, EventDate, EventOption
 from django_countries import countries
 
+
 class EventType(DjangoObjectType):
     class Meta:
         model = Event
         fields = "__all__"
+
 
 class SubscriberType(DjangoObjectType):
     class Meta:
         model = Subscriber
         fields = "__all__"
 
+
 class EventDateType(DjangoObjectType):
     class Meta:
         model = EventDate
         fields = "__all__"
-    
+
     def resolve_current_subscriber_count(root, info):
         return root.current_subscriber_count
+
 
 class EventOptionType(DjangoObjectType):
     class Meta:
         model = EventOption
         fields = "__all__"
 
+
 class CountryType(graphene.ObjectType):
     code = graphene.String()
     name = graphene.String()
 
+
 class Query(graphene.ObjectType):
     all_events = graphene.List(EventType)
-    all_event_dates = graphene.List(EventDateType, event_id=graphene.ID(required=True))
+    all_event_dates = graphene.List(
+        EventDateType, event_id=graphene.ID(required=True))
     all_subscribers = graphene.List(SubscriberType)
     all_countries = graphene.List(CountryType)
 
@@ -47,6 +54,7 @@ class Query(graphene.ObjectType):
 
     def resolve_all_countries(root, info):
         return [{'code': code, 'name': name} for code, name in countries]
+
 
 class CreateSubscriber(graphene.Mutation):
     class Arguments:
@@ -86,7 +94,9 @@ class CreateSubscriber(graphene.Mutation):
             subscriber.options.set(event_options)
         return CreateSubscriber(subscriber=subscriber)
 
+
 class Mutation(graphene.ObjectType):
     create_subscriber = CreateSubscriber.Field()
+
 
 schema = graphene.Schema(query=Query, mutation=Mutation)
