@@ -48,7 +48,8 @@ class Query(graphene.ObjectType):
         return Event.objects.all()
 
     def resolve_all_event_dates(root, info, event_id):
-        return EventDate.objects.filter(event_id=event_id)
+        event_dates = EventDate.objects.filter(event_id=event_id)
+        return [event_date for event_date in event_dates if event_date.current_subscriber_count < event_date.maxSubscribers]
 
     def resolve_all_subscribers(root, info):
         return Subscriber.objects.all()
