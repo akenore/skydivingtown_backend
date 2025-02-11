@@ -30,7 +30,7 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'tinymce',
-    'secure',
+    
     'event',
     'contract',
     'public',

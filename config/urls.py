@@ -16,19 +16,22 @@ from django.views.decorators.csrf import csrf_exempt
 
 
 urlpatterns = [
-    
-    
+
+
     path('superadmin/', admin.site.urls),
     # path('auth/', include('rest_framework.urls')),
     path("graphql", csrf_exempt(GraphQLView.as_view(graphiql=True))),
     path('accounts/', include('allauth.urls')),
     path('tinymce/', include('tinymce.urls')),
-    path('myadmin/', include('secure.urls')),
+
+
     path('', include('public.urls')),
 ]
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL,
+                          document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL,
+                          document_root=settings.STATIC_ROOT)
 
 
 admin.site.site_header = "SuperAdmin"

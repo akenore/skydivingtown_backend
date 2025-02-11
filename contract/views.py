@@ -19,15 +19,14 @@ from_email = settings.DEFAULT_FROM_EMAIL
 admin_emails = settings.ADMIN_LIST_EMAILS
 
 
-class CompanyPublicCreateView(SuccessMessageMixin, CreateView):
+class CompanyCreateView(SuccessMessageMixin, CreateView):
     model = Company
     form_class = CompanyPublicForm
-    success_message = _(
-        "Company Created Successfully. Your request is being reviewed by our team. You will receive your access code shortly.")
-    template_name = "contract/index.html"
+    success_message = _("Company Created Successfully. Your request is being reviewed by our team. You will receive your access code shortly.")
+    template_name = "contract/forms/add.html"
 
     def get_success_url(self):
-        return reverse('new_company')
+        return reverse('add_company')
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
@@ -78,7 +77,7 @@ class CompanyPublicCreateView(SuccessMessageMixin, CreateView):
 class CompanyUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = Company
     form_class = CompanyUpdateForm
-    template_name = "contract/update.html"
+    template_name = "contract/forms/update.html"
 
     def get_success_url(self):
         return reverse('list_company')
@@ -154,8 +153,8 @@ class CompanyListView(ListView):
                 Q(name__icontains=query) |
                 Q(email__icontains=query) |
                 Q(phone__icontains=query)
-            )
-        return Company.objects.all()
+            ).order_by('-published')
+        return Company.objects.all().order_by('-published')
 
     def render_to_response(self, context, **response_kwargs):
         if self.request.GET.get('q'):

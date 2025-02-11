@@ -1,8 +1,12 @@
-from django.urls import path
+from django.urls import path, include
 from public.views import *
-from contract.views import CompanyPublicCreateView
 
 urlpatterns = [
     path('', Home.as_view(), name="home"),
-    path('new-company/', CompanyPublicCreateView.as_view(), name='new_company'),
+    path('myadmin/', AdminView.as_view(), name="myadmin"),
+    path('myadmin/', include([
+         path('events/', include('event.urls')),
+         path('companies/', include('contract.urls')),
+         ])
+         ),
 ]

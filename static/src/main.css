@@ -1222,10 +1222,6 @@ input:checked + .toggle-bg {
   margin-left: 1.25rem;
 }
 
-.ml-96 {
-  margin-left: 24rem;
-}
-
 .mr-1 {
   margin-right: 0.25rem;
 }
@@ -1268,10 +1264,6 @@ input:checked + .toggle-bg {
 
 .mt-5 {
   margin-top: 1.25rem;
-}
-
-.mt-96 {
-  margin-top: 24rem;
 }
 
 .block {
@@ -1326,6 +1318,10 @@ input:checked + .toggle-bg {
   height: 1rem;
 }
 
+.h-48 {
+  height: 12rem;
+}
+
 .h-5 {
   height: 1.25rem;
 }
@@ -1356,10 +1352,6 @@ input:checked + .toggle-bg {
 
 .h-screen {
   height: 100vh;
-}
-
-.h-48 {
-  height: 12rem;
 }
 
 .max-h-full {
