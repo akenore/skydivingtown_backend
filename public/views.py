@@ -8,7 +8,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 class AdminView(LoginRequiredMixin, TemplateView):
-    template_name = "secure/index.html"
+    template_name = "public/secure/index.html"
 
 
 class Home(TemplateView):
