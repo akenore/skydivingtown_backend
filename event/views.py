@@ -103,8 +103,8 @@ class EventListView(LoginRequiredMixin, ListView):
             return Event.objects.filter(
                 Q(name__icontains=query) |
                 Q(description__icontains=query)
-            )
-        return Event.objects.all()
+            ).order_by('-published')
+        return Event.objects.all().order_by('-published')
 
     def render_to_response(self, context, **response_kwargs):
         if self.request.GET.get('q'):

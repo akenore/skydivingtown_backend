@@ -4,3 +4,5 @@ __MACOSX
 .env
 testApp
 .git
+db.sqlite3
+local_db.sqlite3

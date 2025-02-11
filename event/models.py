@@ -72,9 +72,9 @@ class Subscriber(models.Model):
     ]
 
     ALTITUDE_CHOICES = [
-        ('3400', _('3 500 m (11 000 feet)')),
-        ('4500', _('4 500 m (14,000 feet)')),
-        ('4500+', _('Over 4500 m (14,000 feet)')),
+        ('3000', _('3 000 m (10 000 feet)')),
+        ('3200', _('3 200 m (10 500 feet)')),
+        ('3500', _('3 500 m (11 500 feet)')),
     ]
 
     SKYDIVER_OPTIONS = [
