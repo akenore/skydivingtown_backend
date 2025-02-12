@@ -37,20 +37,24 @@
                          <div id="event-dates">
                               {{ eventdate_formset.management_form }}
                               {% for form in eventdate_formset %}
-                                   <div class="flex justify-between mb-4 p-4 border border-gray-300 rounded-lg event-date-form">
+                                   <div class="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-4 p-4 border border-gray-300 rounded-lg event-date-form">
                                         {% for field in form %}
-                                             <div class="space-x-5 mb-2">
-                                                  <label for="{{ field.id_for_label }}"
-                                                         class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                                                       {{ field.label }}
-                                                  </label>
+                                             {% if field.is_hidden %}
                                                   {{ field }}
-                                                  {% if field.errors %}
-                                                       <div class="font-medium text-red-600 dark:text-red-700">
-                                                            {% for error in field.errors %}<strong>{{ error|escape }}</strong>{% endfor %}
-                                                       </div>
-                                                  {% endif %}
-                                             </div>
+                                             {% else %}
+                                                  <div class="mb-2">
+                                                       <label for="{{ field.id_for_label }}"
+                                                              class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                                            {{ field.label }}
+                                                       </label>
+                                                       {{ field }}
+                                                       {% if field.errors %}
+                                                            <div class="font-medium text-red-600 dark:text-red-700">
+                                                                 {% for error in field.errors %}<strong>{{ error|escape }}</strong>{% endfor %}
+                                                            </div>
+                                                       {% endif %}
+                                                  </div>
+                                             {% endif %}
                                         {% endfor %}
                                         <button type="button"
                                                 class="remove-event-date font-medium text-red-600 dark:text-red-700 hover:underline">
@@ -80,7 +84,7 @@
      </div>
 {% endblock body %}
 {% block scripts %}
-<script>
+     <script>
      document.getElementById('add-event-date').addEventListener('click', function() {
          const eventDatesDiv = document.getElementById('event-dates');
          const totalForms = document.getElementById('id_eventdate_set-TOTAL_FORMS');

@@ -27,7 +27,7 @@
           {% block head %}
           {% endblock head %}
      </head>
-     <body class="dark:bg-slate-900">
+     <body class="dark:bg-gray-900">
           {% if request.user.is_staff %}
                {% comment %} <div id="spinner" class="flex items-center justify-center h-screen">
                <div role="status">
@@ -91,7 +91,7 @@
                          role="alert">{% translate "Sorry you don't have permession to access this page" %}</div>
                </div>
           {% endif %}
-          <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+          <script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
           <script src="{% static 'darkmode.js' %}"></script>
           {% comment %} <script>
                window.addEventListener('load', () => {

@@ -1,0 +1,31 @@
+{% extends "public/secure/components/base.html" %}
+{% load static i18n %}
+{% block title %}
+     {% if object %}
+          {% translate "Update option" %}
+     {% else %}
+          {% translate "Add option" %}
+     {% endif %}
+{% endblock title %}
+{% block nav %}
+     {% include "public/secure/components/header.html" %}
+{% endblock nav %}
+{% block aside %}
+     {% include "public/secure/components/sidebar.html" %}
+{% endblock aside %}
+{% block body %}
+     <div class="md:p-4 sm:ml-64">
+          <div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10 dark:text-gray-300">
+               <div class=" overflow-x-auto shadow-md sm:rounded-lg p-8">
+                    <form method="post">
+                         {% csrf_token %}
+                         <div class="mb-5">{{ form }}</div>
+                         <button type="submit"
+                                 class="w-full text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">
+                              Create
+                         </button>
+                    </form>
+               </div>
+          </div>
+     </div>
+{% endblock body %}
