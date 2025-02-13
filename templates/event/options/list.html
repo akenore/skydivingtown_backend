@@ -1,7 +1,7 @@
 {% extends "public/secure/components/base.html" %}
 {% load static i18n %}
 {% block title %}
-     {% translate "Events" %}
+     {% translate "Options" %}
 {% endblock title %}
 {% block nav %}
      {% include "public/secure/components/header.html" %}
@@ -15,8 +15,10 @@
                <div class="relative overflow-x-auto shadow-md sm:rounded-lg p-8">
                     <div class="flex items-center justify-between flex-column md:flex-row flex-wrap space-y-4 md:space-y-0 py-4 bg-white dark:bg-gray-900">
                          <div class="flex items-center space-x-4">
-                              <a href="{% url 'new_event' %}"
-                                 class="text-white bg-gradient-to-r from-purple-500 via-purple-600 to-purple-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-purple-300 dark:focus:ring-purple-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">{% translate "Create new event" %}</a>
+                              <a href="{% url 'add_option' %}"
+                                 class="text-white bg-gradient-to-r from-purple-500 via-purple-600 to-purple-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-purple-300 dark:focus:ring-purple-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">
+                                   {% translate "Add an option" %}
+                              </a>
                          </div>
                          <label for="table-search" class="sr-only">{% translate "Search" %}</label>
                          <div class="relative">
@@ -32,7 +34,7 @@
                               <input type="text"
                                      id="table-search"
                                      class="block p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg w-80 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                     placeholder='{% translate "Search for events" %}'>
+                                     placeholder='{% translate "Search for option" %}'>
                          </div>
                     </div>
                     <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -54,23 +56,11 @@
                                              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.891 15.107 15.11 8.89m-5.183-.52h.01m3.089 7.254h.01M14.08 3.902a2.849 2.849 0 0 0 2.176.902 2.845 2.845 0 0 1 2.94 2.94 2.849 2.849 0 0 0 .901 2.176 2.847 2.847 0 0 1 0 4.16 2.848 2.848 0 0 0-.901 2.175 2.843 2.843 0 0 1-2.94 2.94 2.848 2.848 0 0 0-2.176.902 2.847 2.847 0 0 1-4.16 0 2.85 2.85 0 0 0-2.176-.902 2.845 2.845 0 0 1-2.94-2.94 2.848 2.848 0 0 0-.901-2.176 2.848 2.848 0 0 1 0-4.16 2.849 2.849 0 0 0 .901-2.176 2.845 2.845 0 0 1 2.941-2.94 2.849 2.849 0 0 0 2.176-.901 2.847 2.847 0 0 1 4.159 0Z" />
                                         </svg>
                                    </th>
-                                   <th scope="col" class="px-6 py-3">
-                                        <div class="flex items-center">
-                                             {% translate "Subscribers" %}
-                                             <svg class="ml-2 w-5 h-5 text-gray-800 dark:text-white"
-                                                  aria-hidden="true"
-                                                  xmlns="http://www.w3.org/2000/svg"
-                                                  fill="currentColor"
-                                                  viewBox="0 0 18 20">
-                                                  <path d="M17 5.923A1 1 0 0 0 16 5h-3V4a4 4 0 1 0-8 0v1H2a1 1 0 0 0-1 .923L.086 17.846A2 2 0 0 0 2.08 20h13.84a2 2 0 0 0 1.994-2.153L17 5.923ZM7 9a1 1 0 0 1-2 0V7h2v2Zm0-5a2 2 0 1 1 4 0v1H7V4Zm6 5a1 1 0 1 1-2 0V7h2v2Z" />
-                                             </svg>
-                                        </div>
-                                   </th>
                                    <th scope="col" class="px-6 py-3"></th>
                               </tr>
                          </thead>
-                         <tbody id="event-list">
-                              {% include "event/partial/data.html" %}
+                         <tbody id="option-list">
+                              {% include "event/options/data.html" %}
                          </tbody>
                     </table>
                     <nav class="flex items-center flex-column flex-wrap md:flex-row justify-between pt-4"
@@ -107,15 +97,15 @@
                     document.getElementById('table-search').addEventListener('input', function() {
                          const query = this.value;
                          if (query.length >= 3) {
-                             fetch(`/myadmin/events/search/?q=${query}`)
+                             fetch(`/myadmin/events/options/search/?q=${query}`)
                                  .then(response => response.text())
                                  .then(data => {
-                                     document.getElementById('event-list').innerHTML = data;
+                                     document.getElementById('option-list').innerHTML = data;
                                  })
                                  .catch(error => console.error('Error:', error));
                          } else if (query.length === 0) {
                               
-                              window.location.href = '/myadmin/events/list/';
+                              window.location.href = '/myadmin/events/options/';
                          }
                      });
                     

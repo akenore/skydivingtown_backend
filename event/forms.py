@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.forms.models import inlineformset_factory
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Count, F
-from event.models import Event, EventDate, Subscriber
+from event.models import Event, EventDate, Subscriber, EventOption
 
 
 class NewEventForm(forms.ModelForm):
@@ -72,8 +72,7 @@ class NewEventForm(forms.ModelForm):
             EventDate.objects.filter(event=instance).delete()
 
             for single_date in (start_date + timedelta(n) for n in range((end_date - start_date).days + 1)):
-                EventDate.objects.create(
-                    event=instance, date=single_date, maxSubscribers=max_subscribers)
+                EventDate.objects.create(event=instance, date=single_date, maxSubscribers=max_subscribers)
 
         return instance
 
@@ -82,7 +81,7 @@ class EventDateForm(forms.ModelForm):
     class Meta:
         model = EventDate
         fields = ['date', 'maxSubscribers']
-        widgets = { 
+        widgets = {
             'date': forms.DateInput(attrs={
                 'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
                 'placeholder': 'Date',
@@ -114,8 +113,7 @@ class SubscriberForm(forms.ModelForm):
                 event__pk=event_pk).annotate(
                 subscriber_count=Count('subscribers')
             ).filter(
-                subscriber_count__lt=F(
-                    'maxSubscribers')
+                subscriber_count__lt=F('maxSubscribers')
             )
 
     class Meta:
@@ -131,7 +129,7 @@ class SubscriberForm(forms.ModelForm):
             }),
             'surname': forms.TextInput(attrs={
                 'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
-                'placeholder': _('Name')
+                'placeholder': _('Surname')
             }),
             'email': forms.EmailInput(attrs={
                 'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
@@ -143,7 +141,7 @@ class SubscriberForm(forms.ModelForm):
             }),
             'birthDate': forms.DateInput(attrs={
                 'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
-                'placeholder': 'Date',
+                'placeholder': _('Date'),
                 'type': 'date'
             }),
             'gender': forms.RadioSelect(attrs={
@@ -166,4 +164,23 @@ class SubscriberForm(forms.ModelForm):
                 'placeholder': _('City')
             }),
 
+        }
+
+
+class EventOptionForm(forms.ModelForm):
+
+    class Meta:
+        model = EventOption
+        fields = "__all__"
+
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
+                'placeholder': _('Name'),
+                
+            }),
+            'amount': forms.NumberInput(attrs={
+                'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
+                'placeholder': _('300.00 TND')
+            }),
         }

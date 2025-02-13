@@ -13,8 +13,8 @@ from django.core.mail import EmailMultiAlternatives
 from django.db.models import Q
 from django.template.loader import get_template
 
-from event.models import Event, Subscriber
-from event.forms import NewEventForm, EventDateFormSet, SubscriberForm
+from event.models import Event, EventOption, Subscriber
+from event.forms import NewEventForm, EventDateFormSet, SubscriberForm, EventOptionForm
 
 from_email = settings.DEFAULT_FROM_EMAIL
 admin_emails = settings.ADMIN_LIST_EMAILS
@@ -122,7 +122,8 @@ class EventDetailView(LoginRequiredMixin, SuccessMessageMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         query = self.request.GET.get('q')
-        subscribers = Subscriber.objects.filter(eventDate__event=self.object).order_by('-published')
+        subscribers = Subscriber.objects.filter(
+            eventDate__event=self.object).order_by('-published')
         if query:
             subscribers = subscribers.filter(name__icontains=query)
         paginator = Paginator(subscribers, self.paginate_by)
@@ -131,7 +132,7 @@ class EventDetailView(LoginRequiredMixin, SuccessMessageMixin, DetailView):
         context['page_obj'] = page_obj
         context['query'] = query
         return context
-    
+
     def render_to_response(self, context, **response_kwargs):
         if self.request.GET.get('q'):
             self.template_name = "event/partial/data_subscribers.html"
@@ -164,7 +165,7 @@ class SubscriberUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
         kwargs = super().get_form_kwargs()
         kwargs['event_pk'] = self.object.eventDate.event.pk
         return kwargs
-    
+
     def get_success_url(self):
         return reverse('event', kwargs={'pk': self.object.eventDate.event.pk})
 
@@ -179,3 +180,50 @@ class SubscriberDeleteView(DeleteView):
 
     def get_success_url(self):
         return reverse('event', kwargs={'pk': self.object.eventDate.event.pk})
+
+
+class EventOptionCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = EventOption
+    form_class = EventOptionForm
+    success_url = reverse_lazy('option')
+    success_message = _("Option has been added successfully.")
+    template_name = "event/forms/option.html"
+
+
+class EventOptionUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    model = EventOption
+    form_class = EventOptionForm
+    success_url = reverse_lazy('option')
+    success_message = _("Option has been added successfully.")
+    template_name = "event/forms/option.html"
+
+
+class EventOptionListView(ListView):
+    model = EventOption
+    ordering = ['-published']
+    paginate_by = 1
+    template_name = "event/options/list.html"
+
+    def get_queryset(self):
+        query = self.request.GET.get('q')
+        if query:
+            return EventOption.objects.filter(
+                Q(name__icontains=query) |
+                Q(amount__icontains=query)
+            ).order_by('-published')
+        return EventOption.objects.all().order_by('-published')
+
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.GET.get('q'):
+            self.template_name = "event/options/data.html"
+        return super().render_to_response(context, **response_kwargs)
+
+
+class EventOptionDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+    model = EventOption
+    success_url = reverse_lazy('option')
+    success_message = _("Unfortunately, this option has been deleted")
+
+    def delete(self, request, *args, **kwargs):
+        messages.warning(self.request, self.success_message)
+        return super(EventDeleteView, self).delete(request, *args, **kwargs)
