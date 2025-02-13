@@ -201,7 +201,7 @@ class EventOptionUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
 class EventOptionListView(ListView):
     model = EventOption
     ordering = ['-published']
-    paginate_by = 1
+    paginate_by = 10
     template_name = "event/options/list.html"
 
     def get_queryset(self):
