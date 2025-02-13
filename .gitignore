@@ -6,3 +6,6 @@ testApp
 .git
 db.sqlite3
 local_db.sqlite3
+requirements.txt
+db.json
+.gitignore
