@@ -56,6 +56,36 @@
                                                   </div>
                                              {% endif %}
                                         {% endfor %}
+                                        
+                                        <div class="event-times">
+                                             {{ form.eventtime_formset.management_form }}
+                                             {% for time_form in form.eventtime_formset %}
+                                                  <div class="event-time-form mb-2">
+                                                       {% for time_field in time_form %}
+                                                            {% if time_field.is_hidden %}
+                                                                 {{ time_field }}
+                                                            {% else %}
+                                                                 <div class="mb-2">
+                                                                      <label for="{{ time_field.id_for_label }}"
+                                                                             class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                                                           {{ time_field.label }}
+                                                                      </label>
+                                                                      {{ time_field }}
+                                                                      {% if time_field.errors %}
+                                                                           <div class="font-medium text-red-600 dark:text-red-700">
+                                                                                {% for error in time_field.errors %}<strong>{{ error|escape }}</strong>{% endfor %}
+                                                                           </div>
+                                                                      {% endif %}
+                                                                 </div>
+                                                            {% endif %}
+                                                       {% endfor %}
+                                                  </div>
+                                             {% endfor %}
+                                        </div>
+                                        <button type="button"
+                                                class="add-event-time px-3 py-2 text-xs font-medium text-center text-white bg-green-700 rounded-lg hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">
+                                             {% translate "Add event time" %}
+                                        </button>
                                         <button type="button"
                                                 class="remove-event-date font-medium text-red-600 dark:text-red-700 hover:underline">
                                              {% translate "Remove" %}
@@ -84,7 +114,7 @@
      </div>
 {% endblock body %}
 {% block scripts %}
-     <script>
+<script>
      document.getElementById('add-event-date').addEventListener('click', function() {
          const eventDatesDiv = document.getElementById('event-dates');
          const totalForms = document.getElementById('id_eventdate_set-TOTAL_FORMS');
@@ -115,5 +145,28 @@
              totalForms.value = document.getElementById('event-dates').querySelectorAll('.event-date-form').length;
          });
      });
-     </script>
+
+     document.querySelectorAll('.add-event-time').forEach(button => {
+         button.addEventListener('click', function() {
+             const eventTimesDiv = button.closest('.event-date-form').querySelector('.event-times');
+             const totalForms = eventTimesDiv.querySelector('[name$="-TOTAL_FORMS"]');
+             const currentFormCount = eventTimesDiv.querySelectorAll('.event-time-form').length;
+             const newForm = eventTimesDiv.querySelector('.event-time-form');
+
+             if (newForm) {
+                 const clonedForm = newForm.cloneNode(true);
+                 clonedForm.querySelectorAll('input, select, textarea').forEach((input) => {
+                     const name = input.name.replace(`-${currentFormCount - 1}-`, `-${currentFormCount}-`);
+                     const id = input.id.replace(`-${currentFormCount - 1}-`, `-${currentFormCount}-`);
+                     input.name = name;
+                     input.id = id;
+                     input.value = '';
+                 });
+
+                 eventTimesDiv.appendChild(clonedForm);
+                 totalForms.value = parseInt(totalForms.value) + 1;
+             }
+         });
+     });
+</script>
 {% endblock scripts %}

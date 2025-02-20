@@ -64,6 +64,30 @@ class EventDate(models.Model):
         return self.date.strftime("%d %B %Y")
 
 
+class EventTime(models.Model):
+    event_date = models.ForeignKey(
+        EventDate,
+        on_delete=models.CASCADE,
+        related_name='event_times'
+    )
+    time = models.TimeField(_("Event time"))
+    maxSubscribers = models.PositiveIntegerField(
+        _("Max number of subscribers"),
+        default=0
+    )
+
+    class Meta:
+        verbose_name = _("Event Time")
+        verbose_name_plural = _("Event Times")
+
+    @property
+    def current_subscriber_count(self):
+        return self.subscribers.count()
+
+    def __str__(self):
+        return self.time.strftime("%H:%M")
+
+
 class Subscriber(models.Model):
     published = models.DateTimeField(auto_now=False, auto_now_add=True)
     GENDER_CHOICES = [
@@ -88,6 +112,12 @@ class Subscriber(models.Model):
         on_delete=models.CASCADE,
         related_name='subscribers',
         verbose_name=_("Event Date")
+    )
+    eventTime = models.ForeignKey(
+        EventTime,
+        on_delete=models.CASCADE,
+        related_name='subscribers',
+        verbose_name=_("Event Time")
     )
     phone_regex = RegexValidator(
         regex=r'^\+?1?\d{9,15}$',

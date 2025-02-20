@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib import admin
-from .models import Event, EventDate, EventOption, Subscriber, Payment
+from nested_admin import NestedModelAdmin, NestedStackedInline, NestedTabularInline
+from .models import Event, EventDate, EventTime, EventOption, Subscriber, Payment
 from datetime import timedelta
 from django.utils.translation import gettext as _
 
@@ -36,18 +37,26 @@ class EventAdminForm(forms.ModelForm):
             EventDate.objects.filter(event=instance).delete()
 
             for single_date in (start_date + timedelta(n) for n in range((end_date - start_date).days + 1)):
-                EventDate.objects.create(
+                event_date = EventDate.objects.create(
                     event=instance, date=single_date, maxSubscribers=max_subscribers)
+                EventTime.objects.create(
+                    event_date=event_date, time='09:00:00', maxSubscribers=max_subscribers)
 
         return instance
 
 
-class EventDateInline(admin.TabularInline):
-    model = EventDate
+class EventTimeInline(NestedTabularInline):
+    model = EventTime
     extra = 1
 
 
-class EventAdmin(admin.ModelAdmin):
+class EventDateInline(NestedStackedInline):
+    model = EventDate
+    extra = 1
+    inlines = [EventTimeInline]
+
+
+class EventAdmin(NestedModelAdmin):
     form = EventAdminForm
     list_display = ['name', 'amount', 'published']
     inlines = [EventDateInline]

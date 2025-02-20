@@ -23,6 +23,7 @@ urlpatterns = [
     path("graphql", csrf_exempt(GraphQLView.as_view(graphiql=True))),
     path('accounts/', include('allauth.urls')),
     path('tinymce/', include('tinymce.urls')),
+    path('_nested_admin/', include('nested_admin.urls')),
 
 
     path('', include('public.urls')),

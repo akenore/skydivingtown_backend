@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.forms.models import inlineformset_factory
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Count, F
-from event.models import Event, EventDate, Subscriber, EventOption
+from event.models import Event, EventDate, EventTime, Subscriber, EventOption
 
 
 class NewEventForm(forms.ModelForm):
@@ -72,7 +72,10 @@ class NewEventForm(forms.ModelForm):
             EventDate.objects.filter(event=instance).delete()
 
             for single_date in (start_date + timedelta(n) for n in range((end_date - start_date).days + 1)):
-                EventDate.objects.create(event=instance, date=single_date, maxSubscribers=max_subscribers)
+                event_date = EventDate.objects.create(
+                    event=instance, date=single_date, maxSubscribers=max_subscribers)
+                EventTime.objects.create(
+                    event_date=event_date, time='09:00:00', maxSubscribers=max_subscribers)
 
         return instance
 
@@ -93,6 +96,30 @@ class EventDateForm(forms.ModelForm):
             }),
         }
 
+
+class EventTimeForm(forms.ModelForm):
+    class Meta:
+        model = EventTime
+        fields = ['time', 'maxSubscribers']
+        widgets = {
+            'time': forms.TimeInput(attrs={
+                'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
+                'placeholder': 'Time',
+                'type': 'time'
+            }),
+            'maxSubscribers': forms.NumberInput(attrs={
+                'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
+                'placeholder': 'Max Subscribers'
+            }),
+        }
+
+EventTimeFormSet = inlineformset_factory(
+    EventDate,
+    EventTime,
+    form=EventTimeForm,
+    extra=1,
+    can_delete=True
+)
 
 EventDateFormSet = inlineformset_factory(
     Event,
@@ -177,7 +204,7 @@ class EventOptionForm(forms.ModelForm):
             'name': forms.TextInput(attrs={
                 'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
                 'placeholder': _('Name'),
-                
+
             }),
             'amount': forms.NumberInput(attrs={
                 'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',

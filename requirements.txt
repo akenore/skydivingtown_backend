@@ -53,3 +53,4 @@ urllib3
 wheel
 psycopg
 psycopg2-binary
+django-nested-admin

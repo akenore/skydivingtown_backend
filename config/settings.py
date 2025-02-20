@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'tinymce',
+    'nested_admin',
     
     'event',
     'contract',

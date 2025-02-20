@@ -14,7 +14,7 @@ from django.db.models import Q
 from django.template.loader import get_template
 
 from event.models import Event, EventOption, Subscriber
-from event.forms import NewEventForm, EventDateFormSet, SubscriberForm, EventOptionForm
+from event.forms import NewEventForm, EventDateFormSet,EventTimeFormSet, SubscriberForm, EventOptionForm
 
 from_email = settings.DEFAULT_FROM_EMAIL
 admin_emails = settings.ADMIN_LIST_EMAILS
@@ -31,8 +31,12 @@ class EventCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
         context = super().get_context_data(**kwargs)
         if self.request.POST:
             context['eventdate_formset'] = EventDateFormSet(self.request.POST)
+            for eventdate_form in context['eventdate_formset']:
+                eventdate_form.eventtime_formset = EventTimeFormSet(self.request.POST, instance=eventdate_form.instance)
         else:
             context['eventdate_formset'] = EventDateFormSet()
+            for eventdate_form in context['eventdate_formset']:
+                eventdate_form.eventtime_formset = EventTimeFormSet(instance=eventdate_form.instance)
         context['view'] = 'EventCreateView'
         return context
 
@@ -43,6 +47,11 @@ class EventCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
             self.object = form.save()
             eventdate_formset.instance = self.object
             eventdate_formset.save()
+            for eventdate_form in eventdate_formset:
+                eventtime_formset = eventdate_form.eventtime_formset
+                if eventtime_formset.is_valid():
+                    eventtime_formset.instance = eventdate_form.instance
+                    eventtime_formset.save()
             return super().form_valid(form)
         else:
             return self.render_to_response(self.get_context_data(form=form))
@@ -61,11 +70,13 @@ class EventUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if self.request.POST:
-            context['eventdate_formset'] = EventDateFormSet(
-                self.request.POST, instance=self.object)
+            context['eventdate_formset'] = EventDateFormSet(self.request.POST, instance=self.object)
+            for eventdate_form in context['eventdate_formset']:
+                eventdate_form.eventtime_formset = EventTimeFormSet(self.request.POST, instance=eventdate_form.instance)
         else:
-            context['eventdate_formset'] = EventDateFormSet(
-                instance=self.object)
+            context['eventdate_formset'] = EventDateFormSet(instance=self.object)
+            for eventdate_form in context['eventdate_formset']:
+                eventdate_form.eventtime_formset = EventTimeFormSet(instance=eventdate_form.instance)
         context['view'] = 'EventUpdateView'
         return context
 
@@ -76,6 +87,11 @@ class EventUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
             self.object = form.save()
             eventdate_formset.instance = self.object
             eventdate_formset.save()
+            for eventdate_form in eventdate_formset:
+                eventtime_formset = eventdate_form.eventtime_formset
+                if eventtime_formset.is_valid():
+                    eventtime_formset.instance = eventdate_form.instance
+                    eventtime_formset.save()
             return super().form_valid(form)
         else:
             return self.render_to_response(self.get_context_data(form=form))
