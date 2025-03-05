@@ -21,7 +21,7 @@ from datetime import datetime, timedelta
 from django.views.decorators.http import require_http_methods
 from django.template.response import TemplateResponse
 import pandas as pd
-from reportlab.lib.pagesizes import letter
+from reportlab.lib.pagesizes import letter, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
 
@@ -363,8 +363,8 @@ class ExportSubscribersView(View):
             )]) if subscriber.options.exists() else ''
             subscriber_data = {
                 _('Gender'): subscriber.get_gender_display(),
-                _('Full name'): f"{subscriber.name} {subscriber.surname}",
-                _('Information'): f"{_('Email')}: {subscriber.email} \n {_('Phone')}: {subscriber.phone} \n {_('Age')}: {subscriber.birthDate} \n {_('Country')}: {subscriber.country.name} \n {_('Region')}: {subscriber.region}",
+                _('Full name'): f"{subscriber.name} \n {subscriber.surname}",
+                _('Information'): f"{_('Email')}: {subscriber.email} \n {_('Phone')}: {subscriber.phone} \n {_('Age')}: {subscriber.birthDate} \n {_('Country')}: {subscriber.country.name} \n {_('Region')}: {subscriber.region} \n {_('Gender')}: {subscriber.get_gender_display()}",
                 _('Jump info'): f"{_('Altitude')}: {subscriber.get_altitude_display()} \n {_('Skydiver Option')}: {subscriber.get_skydiverOption_display()} \n {_('Options')}: {options} \n {_('Date')}: {subscriber.eventDate.date} \n {_('Time')}: {subscriber.eventTime.time}",
 
             }
@@ -393,7 +393,7 @@ class ExportSubscribersView(View):
             response = HttpResponse(content_type='application/pdf')
             response['Content-Disposition'] = f'attachment; filename={event.name}_subscribers.pdf'
 
-            doc = SimpleDocTemplate(response, pagesize=letter)
+            doc = SimpleDocTemplate(response, pagesize=landscape(letter))
             elements = []
 
             table_data = list(data[0].keys())
@@ -403,13 +403,13 @@ class ExportSubscribersView(View):
 
             t = Table(table_data)
             t.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('BACKGROUND', (0, 0), (-1, 0), colors.black),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
                 ('FONTSIZE', (0, 0), (-1, 0), 13),
                 ('BOTTOMPADDING', (0, 0), (-1, 0), 13),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
                 ('GRID', (0, 0), (-1, -1), 1, colors.black)
             ]))
             elements.append(t)
