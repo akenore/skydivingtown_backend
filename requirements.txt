@@ -57,3 +57,4 @@ django-nested-admin
 openpyxl
 reportlab
 pandas
+django-birthday

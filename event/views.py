@@ -2,7 +2,7 @@ from datetime import datetime
 from django.conf import settings
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse, reverse_lazy
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
 from django.utils.translation import gettext as _
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView, ListView, View
@@ -12,7 +12,6 @@ from django.contrib import messages
 from django.core.mail import EmailMultiAlternatives
 from django.db.models import Q
 from django.template.loader import get_template
-from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_http_methods
 from django.forms.models import inlineformset_factory
@@ -35,28 +34,41 @@ admin_emails = settings.ADMIN_LIST_EMAILS
 
 @require_http_methods(["GET"])
 def add_event_date_form(request):
-    form = EventDateForm()
-    form.eventtime_formset = EventTimeFormSet()
+    index = int(request.GET.get('index', 0))
+    form = EventDateForm(prefix=f'eventdate_set-{index}')
+    
+    # Create a time formset for this new date
+    form.eventtime_formset = EventTimeFormSet(prefix=f'time_{index}')
+    
     context = {
         'form': form,
-        'forloop': {'counter0': request.GET.get('index', 0)}
+        'forloop': {'counter0': index}
     }
-    html = render_to_string(
-        'event/forms/partials/event_date_form.html', context, request=request)
+    html = render_to_string('event/forms/partials/event_date_form.html', context, request=request)
     return HttpResponse(html)
 
 
 @require_http_methods(["GET"])
 def add_event_time_form(request):
-    date_index = request.GET.get('date_index', 0)
-    form = EventTimeForm()
+    date_index = int(request.GET.get('date_index', 0))
+    
+    # Get the current count of time forms for this date
+    prefix = f'time_{date_index}'
+    total_forms_name = f'{prefix}-TOTAL_FORMS'
+    
+    # Default to index 0 if we can't determine the count
+    time_index = 0
+    if total_forms_name in request.GET:
+        time_index = int(request.GET.get(total_forms_name, 0))
+    
+    form = EventTimeForm(prefix=f'{prefix}-{time_index}')
+    
     context = {
         'form': form,
-        'forloop': {'counter0': request.GET.get('index', 0)},
-        'date_index': date_index
+        'date_index': date_index,
+        'time_index': time_index
     }
-    html = render_to_string(
-        'event/forms/partials/event_time_form.html', context, request=request)
+    html = render_to_string('event/forms/partials/event_time_form.html', context, request=request)
     return HttpResponse(html)
 
 
@@ -71,17 +83,19 @@ def remove_event_date_form(request, pk):
 
 
 @require_http_methods(["DELETE"])
-@csrf_protect
+def remove_event_date_form(request, pk):
+    event_date = get_object_or_404(EventDate, pk=pk)
+    event_date.delete()
+    return HttpResponse(status=204)
+
+
 def remove_event_time_form(request, pk):
-    try:
-        event_time = EventTime.objects.get(pk=pk)
+    if request.method == "DELETE":
+        event_time = get_object_or_404(EventTime, pk=pk)
         event_time.delete()
-        return HttpResponse(status=204)
-    except EventTime.DoesNotExist:
-        return JsonResponse(
-            {'error': 'EventTime not found'},
-            status=404
-        )
+        # HTMX needs some response, so we return an empty response with a 200 status
+        return HttpResponse('', status=200, content_type="text/html")
+    return HttpResponse(status=400)
 
 
 class EventCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
@@ -93,41 +107,68 @@ class EventCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        
         if self.request.POST:
             context['eventdate_formset'] = EventDateFormSet(self.request.POST)
-            for eventdate_form in context['eventdate_formset']:
-                eventdate_form.eventtime_formset = EventTimeFormSet(
-                    self.request.POST, prefix='time_'+str(context["eventdate_formset"].forms.index(eventdate_form)))
+            
+            # For each date form, create its time formset
+            for i, date_form in enumerate(context['eventdate_formset']):
+                prefix = f'time_{i}'
+                date_form.eventtime_formset = EventTimeFormSet(
+                    self.request.POST, prefix=prefix)
         else:
             context['eventdate_formset'] = EventDateFormSet()
-            for eventdate_form in context['eventdate_formset']:
-                eventdate_form.eventtime_formset = EventTimeFormSet(
-                    prefix='time_'+str(context["eventdate_formset"].forms.index(eventdate_form)))
+            
+            # For each date form, create its time formset
+            for i, date_form in enumerate(context['eventdate_formset']):
+                prefix = f'time_{i}'
+                date_form.eventtime_formset = EventTimeFormSet(prefix=prefix)
+        
         return context
 
     def form_valid(self, form):
         context = self.get_context_data()
         eventdate_formset = context['eventdate_formset']
-        if form.is_valid() and eventdate_formset.is_valid():
+        
+        # Flag to track if all forms are valid
+        all_valid = form.is_valid() and eventdate_formset.is_valid()
+        
+        # Check if all time formsets are valid
+        for date_form in eventdate_formset:
+            if date_form.cleaned_data and not date_form.cleaned_data.get('DELETE', False):
+                if not date_form.eventtime_formset.is_valid():
+                    all_valid = False
+                    break
+        
+        if all_valid:
+            # Save the main event
             self.object = form.save()
-            eventdate_formset.instance = self.object
-            eventdate_forms = eventdate_formset.save(commit=False)
-
-            for eventdate_form in eventdate_formset:
-                if eventdate_form.cleaned_data and not eventdate_form.cleaned_data.get('DELETE', False):
-                    eventdate = eventdate_form.save(commit=False)
-                    eventdate.event = self.object
-                    eventdate.save()
-
-                    eventtime_formset = eventdate_form.eventtime_formset
-                    eventtime_formset.instance = eventdate
-                    if eventtime_formset.is_valid():
-                        eventtime_forms = eventtime_formset.save(commit=False)
-                        for eventtime in eventtime_forms:
-                            eventtime.event_date = eventdate
-                            eventtime.save()
-
+            
+            # Save event dates
+            for i, date_form in enumerate(eventdate_formset):
+                if date_form.cleaned_data and not date_form.cleaned_data.get('DELETE', False):
+                    # Save the event date
+                    event_date = date_form.save(commit=False)
+                    event_date.event = self.object
+                    event_date.save()
+                    
+                    # Save the time formset for this date
+                    time_formset = date_form.eventtime_formset
+                    time_instances = time_formset.save(commit=False)
+                    
+                    # Set the event_date for each time instance and save
+                    for time_instance in time_instances:
+                        time_instance.event_date = event_date
+                        time_instance.save()
+                    
+                    # Handle any deleted times
+                    for time_form in time_formset.deleted_forms:
+                        if time_form.instance.pk:
+                            time_form.instance.delete()
+            
             return super().form_valid(form)
+        
+        # If not all forms are valid, return form_invalid
         return self.form_invalid(form)
 
 
@@ -142,58 +183,88 @@ class EventUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        
         if self.request.POST:
             context['eventdate_formset'] = EventDateFormSet(
                 self.request.POST, instance=self.object)
-            for eventdate_form in context['eventdate_formset']:
-                eventdate_form.eventtime_formset = EventTimeFormSet(
-                    self.request.POST,
-                    instance=eventdate_form.instance,
-                    prefix='time_' +
-                    str(context['eventdate_formset'].forms.index(
-                        eventdate_form))
-                )
-
+            
+            # For each date form, create its time formset
+            for i, date_form in enumerate(context['eventdate_formset']):
+                prefix = f'time_{i}'
+                if date_form.instance.pk:
+                    # If this is an existing date, use its instance for the time formset
+                    date_form.eventtime_formset = EventTimeFormSet(
+                        self.request.POST, instance=date_form.instance, prefix=prefix)
+                else:
+                    # For new dates being added
+                    date_form.eventtime_formset = EventTimeFormSet(
+                        self.request.POST, prefix=prefix)
         else:
-            context['eventdate_formset'] = EventDateFormSet(
-                instance=self.object)
-            for eventdate_form in context['eventdate_formset']:
-                eventdate_form.eventtime_formset = EventTimeFormSet(
-                    instance=eventdate_form.instance,
-                    prefix='time_' +
-                    str(context['eventdate_formset'].forms.index(
-                        eventdate_form))
-                )
+            context['eventdate_formset'] = EventDateFormSet(instance=self.object)
+            
+            # For each date form, create its time formset
+            for i, date_form in enumerate(context['eventdate_formset']):
+                prefix = f'time_{i}'
+                if date_form.instance.pk:
+                    date_form.eventtime_formset = EventTimeFormSet(
+                        instance=date_form.instance, prefix=prefix)
+                else:
+                    date_form.eventtime_formset = EventTimeFormSet(prefix=prefix)
+        
         return context
 
     def form_valid(self, form):
         context = self.get_context_data()
         eventdate_formset = context['eventdate_formset']
-
-        if form.is_valid() and eventdate_formset.is_valid():
+        
+        # Flag to track if all forms are valid
+        all_valid = form.is_valid() and eventdate_formset.is_valid()
+        
+        # Check if all time formsets are valid
+        for date_form in eventdate_formset:
+            if date_form.cleaned_data and not date_form.cleaned_data.get('DELETE', False):
+                if not date_form.eventtime_formset.is_valid():
+                    all_valid = False
+                    break
+        
+        if all_valid:
+            # Save the main event
             self.object = form.save()
-
-            for date_form in eventdate_formset:
-                if date_form.is_valid() and date_form.cleaned_data:
-                    if date_form.cleaned_data.get('DELETE'):
-                        if date_form.instance.pk:
-                            date_form.instance.delete()
-                        continue
+            
+            # Process the date formset
+            eventdate_formset.instance = self.object
+            
+            # Handle deleted dates
+            for date_form in eventdate_formset.deleted_forms:
+                if date_form.instance.pk:
+                    date_form.instance.delete()
+            
+            # Save remaining dates and their times
+            for i, date_form in enumerate(eventdate_formset):
+                if date_form.cleaned_data and not date_form.cleaned_data.get('DELETE', False):
+                    # Save the event date
                     event_date = date_form.save(commit=False)
                     event_date.event = self.object
                     event_date.save()
+                    
+                    # Save the time formset for this date
                     time_formset = date_form.eventtime_formset
                     time_formset.instance = event_date
-                    if time_formset.is_valid():
-                        for time_form in time_formset.deleted_forms:
-                            if time_form.instance.pk:
-                                time_form.instance.delete()
-                        times = time_formset.save(commit=False)
-                        for time in times:
-                            time.event_date = event_date
-                            time.save()
+                    
+                    # Handle deleted times
+                    for time_form in time_formset.deleted_forms:
+                        if time_form.instance.pk:
+                            time_form.instance.delete()
+                    
+                    # Save remaining times
+                    time_instances = time_formset.save(commit=False)
+                    for time_instance in time_instances:
+                        time_instance.event_date = event_date
+                        time_instance.save()
+            
             messages.success(self.request, self.success_message)
             return super().form_valid(form)
+        
         return self.form_invalid(form)
 
 
@@ -267,8 +338,7 @@ class SubscriberCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
         return kwargs
 
     def get_success_url(self):
-        # return reverse('event', kwargs={'pk': self.kwargs['pk']})
-        return self.request.path
+        return reverse('event', kwargs={'pk': self.object.eventDate.event.pk})
 
 
 class SubscriberUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
@@ -284,6 +354,7 @@ class SubscriberUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
 
     def get_success_url(self):
         return reverse('event', kwargs={'pk': self.object.eventDate.event.pk})
+
 
 
 class SubscriberDeleteView(DeleteView):

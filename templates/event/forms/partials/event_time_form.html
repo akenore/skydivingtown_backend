@@ -1,25 +1,30 @@
 {% load i18n %}
-<div class="event-time-form mb-2"
-     id="event-time-{{ form.instance.pk|default:forloop.counter0 }}">
-    {% for field in form %}
-        {% if field.is_hidden %}
-            {{ field }}
-        {% else %}
-            <div class="mb-2">
-                <label for="{{ field.id_for_label }}"
-                       class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ field.label }}</label>
-                {{ field }}
-                {% if field.errors %}
-                    <div class="font-medium text-red-600 dark:text-red-700">
-                        {% for error in field.errors %}<strong>{{ error|escape }}</strong>{% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-        {% endif %}
+<div class="event-time-form mb-3 p-3 bg-gray-50 dark:bg-gray-800 rounded">
+    {% for hidden in form.hidden_fields %}
+        {{ hidden }}
     {% endfor %}
-    {% comment %} {% if form.instance.pk %}
-    <button type="button" class="text-red-600 hover:text-red-800" hx-delete="{% url 'remove_event_time_form' form.instance.pk %}" hx-target="#event-time-{{ form.instance.pk }}" hx-swap="outerHTML">
-        {% translate "Remove" %}
-    </button>
-    {% endif %} {% endcomment %}
+    
+    <div class="grid sm:grid-cols-1 md:grid-cols-2 gap-4">
+        {% for field in form.visible_fields %}
+            {% if field.name != 'DELETE' %}
+                <div class="mb-2">
+                    <label for="{{ field.id_for_label }}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                        {{ field.label }}
+                    </label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <div class="text-red-500">
+                            {% for error in field.errors %}<strong>{{ error|escape }}</strong>{% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    
+    <div class="flex justify-end">
+        <button type="button" class="text-red-600 hover:text-red-800 remove-time">
+            {% translate "Remove" %}
+        </button>
+    </div>
 </div>

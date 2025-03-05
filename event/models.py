@@ -5,7 +5,7 @@ from autoslug import AutoSlugField
 from django_countries.fields import CountryField
 from django.core.validators import RegexValidator
 from django.utils.translation import gettext as _
-
+from birthday import BirthdayField, BirthdayManager
 
 class EventOption(models.Model):
     name = models.CharField(_("Option name"), max_length=100)
@@ -119,7 +119,7 @@ class Subscriber(models.Model):
     name = models.CharField(_("First Name"), max_length=100)
     surname = models.CharField(_("Last name"), max_length=100)
     phone = models.CharField(_("Phone"), validators=[phone_regex], max_length=17, blank=True)
-    birthDate = models.DateField(_("Birth Date"))
+    birthDate = BirthdayField(_("Birth Date"))
     country = CountryField(blank_label=_("(Select country)"))
     region = models.CharField(_("City"), max_length=100)
     gender = models.CharField(_("Gender"), max_length=1, choices=GENDER_CHOICES, default='M')

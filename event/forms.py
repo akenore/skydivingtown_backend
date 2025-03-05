@@ -1,9 +1,10 @@
 from django import forms
-from datetime import timedelta
+from datetime import datetime, timedelta
 from django.forms.models import inlineformset_factory
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Count, F
 from event.models import Event, EventDate, EventTime, Subscriber, EventOption
+import datetime
 
 
 class NewEventForm(forms.ModelForm):
@@ -122,6 +123,7 @@ EventTimeFormSet = inlineformset_factory(
 
 
 class SubscriberForm(forms.ModelForm):
+    
 
     def __init__(self, *args, **kwargs):
         event_pk = kwargs.pop('event_pk', None)
@@ -155,11 +157,13 @@ class SubscriberForm(forms.ModelForm):
                 'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
                 'placeholder': _('Phone')
             }),
-            'birthDate': forms.DateInput(attrs={
+            'birthDate': forms.widgets.SelectDateWidget(attrs={
                 'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
-                'placeholder': _('Date'),
-                'type': 'date'
-            }),
+                
+            },
+            years=range(1970, 2025),
+            empty_label=(_("Year"), _("Month"), _("Day")),
+            ),
             'gender': forms.RadioSelect(attrs={
                 'class': 'm-0',
             }),
@@ -180,6 +184,19 @@ class SubscriberForm(forms.ModelForm):
                 'placeholder': _('City')
             }),
         }
+
+    # def clean(self):
+    #     cleaned_data = super().clean()
+    #     day = cleaned_data.get('birth_day')
+    #     month = cleaned_data.get('birth_month')
+    #     year = cleaned_data.get('birth_year')
+
+    #     if day and month and year:
+    #         try:
+    #             cleaned_data['birthDate'] = datetime.date(int(year), int(month), int(day))
+    #         except ValueError:
+    #             self.add_error('birthDate', 'Invalid date')
+    #     return cleaned_data
 
 
 class EventOptionForm(forms.ModelForm):
