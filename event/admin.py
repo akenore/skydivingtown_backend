@@ -2,72 +2,45 @@ from django import forms
 from django.contrib import admin
 from nested_admin import NestedModelAdmin, NestedStackedInline, NestedTabularInline
 from .models import Event, EventDate, EventTime, EventOption, Subscriber, Payment
-from datetime import timedelta
+from datetime import timedelta, datetime
 from django.utils.translation import gettext as _
-
-
-class EventAdminForm(forms.ModelForm):
-    start_date = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date'}),
-        required=False,
-        label=_("Start Date")
-    )
-    end_date = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date'}),
-        required=False,
-        label=_("End Date")
-    )
-    max_subscribers = forms.IntegerField(
-        required=False, label=_("Max Subscribers"))
-
-    class Meta:
-        model = Event
-        fields = '__all__'
-
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        start_date = self.cleaned_data.get('start_date')
-        end_date = self.cleaned_data.get('end_date')
-        max_subscribers = self.cleaned_data.get('max_subscribers')
-
-        if commit:
-            instance.save()
-
-        if start_date and end_date and max_subscribers is not None:
-            EventDate.objects.filter(event=instance).delete()
-
-            for single_date in (start_date + timedelta(n) for n in range((end_date - start_date).days + 1)):
-                event_date = EventDate.objects.create(
-                    event=instance, date=single_date, maxSubscribers=max_subscribers)
-                EventTime.objects.create(
-                    event_date=event_date, time='09:00:00', maxSubscribers=max_subscribers)
-
-        return instance
 
 
 class EventTimeInline(NestedTabularInline):
     model = EventTime
     extra = 1
+    fields = ['time', 'maxSubscribers']
 
 
 class EventDateInline(NestedStackedInline):
     model = EventDate
     extra = 1
     inlines = [EventTimeInline]
+    fields = ['date']
 
 
 class EventAdmin(NestedModelAdmin):
-    form = EventAdminForm
-    list_display = ['name', 'amount', 'published']
     inlines = [EventDateInline]
+    list_display = ['name', 'amount', 'published']
 
-    def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
-        if obj:
-            form.base_fields['start_date'].initial = None
-            form.base_fields['end_date'].initial = None
-            form.base_fields['max_subscribers'].initial = None
-        return form
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+
+        existing_dates = set()
+        if change:
+            existing_dates = set(
+                obj.event_dates.values_list('date', flat=True))
+
+        new_dates = set()
+        if hasattr(form, 'nested_formsets'):
+            for nested_formset in form.nested_formsets:
+                if nested_formset.instance:
+                    new_dates.add(nested_formset.instance.date)
+
+        dates_to_delete = existing_dates - new_dates
+        if dates_to_delete:
+            EventDate.objects.filter(
+                event=obj, date__in=dates_to_delete).delete()
 
 
 class EventOptionAdmin(admin.ModelAdmin):
@@ -78,3 +51,4 @@ admin.site.register(Event, EventAdmin)
 admin.site.register(EventOption, EventOptionAdmin)
 admin.site.register(Subscriber)
 admin.site.register(Payment)
+# admin.site.register(EventTime)

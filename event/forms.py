@@ -7,36 +7,28 @@ from event.models import Event, EventDate, EventTime, Subscriber, EventOption
 
 
 class NewEventForm(forms.ModelForm):
-    start_date = forms.DateField(
-        widget=forms.DateInput(
-            attrs={
-                'type': 'date',
-                'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
-                'placeholder': _('Start Date')
-            }
-        ),
-        required=False,
-        label=_("Start Date")
-    )
-    end_date = forms.DateField(
-        widget=forms.DateInput(
-            attrs={
-                'type': 'date',
-                'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
-                'placeholder': _('End Date')
-            }
-        ),
-        required=False,
-        label=_("End Date")
-    )
-    max_subscribers = forms.IntegerField(
-        widget=forms.NumberInput(
-            attrs={
-                'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
-                'placeholder': _('Max Subscribers')
-            }
-        ),
-        required=False, label=_("Max Subscribers"))
+    # start_date = forms.DateField(
+    #     widget=forms.DateInput(
+    #         attrs={
+    #             'type': 'date',
+    #             'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
+    #             'placeholder': _('Start Date')
+    #         }
+    #     ),
+    #     required=False,
+    #     label=_("Start Date")
+    # )
+    # end_date = forms.DateField(
+    #     widget=forms.DateInput(
+    #         attrs={
+    #             'type': 'date',
+    #             'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
+    #             'placeholder': _('End Date')
+    #         }
+    #     ),
+    #     required=False,
+    #     label=_("End Date")
+    # )
 
     class Meta:
         model = Event
@@ -44,7 +36,8 @@ class NewEventForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
-                'placeholder': _('Event name')
+                'placeholder': _('Event name'),
+                'autocomplete': 'on'
             }),
             'options': forms.CheckboxSelectMultiple(attrs={
                 'class': 'form-checkbox transition duration-150 ease-in-out'
@@ -63,36 +56,33 @@ class NewEventForm(forms.ModelForm):
         instance = super().save(commit=False)
         start_date = self.cleaned_data.get('start_date')
         end_date = self.cleaned_data.get('end_date')
-        max_subscribers = self.cleaned_data.get('max_subscribers')
 
         if commit:
             instance.save()
 
-        if start_date and end_date and max_subscribers is not None:
-            EventDate.objects.filter(event=instance).delete()
+        if start_date and end_date:
+            if instance.pk:
+                EventDate.objects.filter(event=instance).delete()
 
-            for single_date in (start_date + timedelta(n) for n in range((end_date - start_date).days + 1)):
+            for single_date in (start_date + timedelta(days=n) for n in range((end_date - start_date).days + 1)):
                 event_date = EventDate.objects.create(
-                    event=instance, date=single_date, maxSubscribers=max_subscribers)
+                    event=instance, date=single_date)
                 EventTime.objects.create(
-                    event_date=event_date, time='09:00:00', maxSubscribers=max_subscribers)
+                    event_date=event_date, time='09:00:00')
 
         return instance
 
 
 class EventDateForm(forms.ModelForm):
+
     class Meta:
         model = EventDate
-        fields = ['date', 'maxSubscribers']
+        fields = ['date']
         widgets = {
             'date': forms.DateInput(attrs={
                 'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
                 'placeholder': 'Date',
-                'type': 'date'
-            }),
-            'maxSubscribers': forms.NumberInput(attrs={
-                'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
-                'placeholder': 'Max Subscribers'
+                'type': 'date', 'required': False
             }),
         }
 
@@ -113,20 +103,21 @@ class EventTimeForm(forms.ModelForm):
             }),
         }
 
-EventTimeFormSet = inlineformset_factory(
-    EventDate,
-    EventTime,
-    form=EventTimeForm,
-    extra=1,
-    can_delete=True
-)
 
 EventDateFormSet = inlineformset_factory(
     Event,
     EventDate,
     form=EventDateForm,
     extra=1,
-    can_delete=True
+    can_delete=True,
+)
+
+EventTimeFormSet = inlineformset_factory(
+    EventDate,
+    EventTime,
+    form=EventTimeForm,
+    extra=1,
+    can_delete=True,
 )
 
 
@@ -137,11 +128,9 @@ class SubscriberForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if event_pk:
             self.fields['eventDate'].queryset = EventDate.objects.filter(
-                event__pk=event_pk).annotate(
-                subscriber_count=Count('subscribers')
-            ).filter(
-                subscriber_count__lt=F('maxSubscribers')
-            )
+                event__pk=event_pk
+            ).annotate(subscriber_count=Count('event_times__subscribers')
+                       ).filter(event_times__maxSubscribers__gt=F('subscriber_count')).distinct()
 
     class Meta:
         model = Subscriber
@@ -190,7 +179,6 @@ class SubscriberForm(forms.ModelForm):
                 'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
                 'placeholder': _('City')
             }),
-
         }
 
 
@@ -204,7 +192,6 @@ class EventOptionForm(forms.ModelForm):
             'name': forms.TextInput(attrs={
                 'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
                 'placeholder': _('Name'),
-
             }),
             'amount': forms.NumberInput(attrs={
                 'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',

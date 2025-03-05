@@ -54,3 +54,6 @@ wheel
 psycopg
 psycopg2-binary
 django-nested-admin
+openpyxl
+reportlab
+pandas
