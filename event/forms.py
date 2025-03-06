@@ -53,25 +53,25 @@ class NewEventForm(forms.ModelForm):
             }),
         }
 
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        start_date = self.cleaned_data.get('start_date')
-        end_date = self.cleaned_data.get('end_date')
+    # def save(self, commit=True):
+    #     instance = super().save(commit=False)
+    #     start_date = self.cleaned_data.get('start_date')
+    #     end_date = self.cleaned_data.get('end_date')
 
-        if commit:
-            instance.save()
+    #     if commit:
+    #         instance.save()
 
-        if start_date and end_date:
-            if instance.pk:
-                EventDate.objects.filter(event=instance).delete()
+    #     if start_date and end_date:
+    #         if instance.pk:
+    #             EventDate.objects.filter(event=instance).delete()
 
-            for single_date in (start_date + timedelta(days=n) for n in range((end_date - start_date).days + 1)):
-                event_date = EventDate.objects.create(
-                    event=instance, date=single_date)
-                EventTime.objects.create(
-                    event_date=event_date, time='09:00:00')
+    #         for single_date in (start_date + timedelta(days=n) for n in range((end_date - start_date).days + 1)):
+    #             event_date = EventDate.objects.create(
+    #                 event=instance, date=single_date)
+    #             EventTime.objects.create(
+    #                 event_date=event_date, time='09:00:00')
 
-        return instance
+    #     return instance
 
 
 class EventDateForm(forms.ModelForm):

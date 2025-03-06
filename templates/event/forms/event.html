@@ -8,7 +8,7 @@
     {% endif %}
 {% endblock title %}
 {% block head %}
-    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <script src="//unpkg.com/alpinejs" defer></script>
 {% endblock head %}
 {% block nav %}
     {% include "public/secure/components/header.html" %}
@@ -20,7 +20,7 @@
     <div class="md:p-4 sm:ml-64">
         <div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10 dark:text-gray-300">
             <div class="shadow-md sm:rounded-lg p-8">
-                <form method="post" id="event-form">
+                <form method="post" id="event-form" x-data="eventForm()">
                     {% csrf_token %}
                     {% for field in form %}
                         <div class="mb-4">
@@ -39,10 +39,10 @@
                     <div class="w-full px-2 bg-amber-300 dark:bg-amber-900 mb-2 rounded-t-lg">
                         <h3 class="text-lg font-medium text-gray-900 dark:text-white py-1">{% translate "Event Dates" %}</h3>
                     </div>
-                    <div id="event-dates">
+                    <div id="event-dates" x-ref="eventDates">
                         {{ eventdate_formset.management_form }}
                         {% for event_date_form in eventdate_formset %}
-                            <div class="event-date-form mb-4 p-4 border border-gray-300 rounded-lg">
+                            <div class="event-date-form mb-4 p-4 border border-gray-300 rounded-lg" x-data="eventDateForm({{ forloop.counter0 }})">
                                 {% for hidden in event_date_form.hidden_fields %}{{ hidden }}{% endfor %}
                                 <div class="grid sm:grid-cols-1 md:grid-cols-2 gap-4">
                                     {% for field in event_date_form.visible_fields %}
@@ -72,7 +72,7 @@
                                 {% endif %}
                                 <div class="mt-4 border-t pt-4">
                                     <h4 class="text-md font-medium mb-2">{% translate "Event Times" %}</h4>
-                                    <div class="event-times" id="event-times-{{ forloop.counter0 }}">
+                                    <div class="event-times" id="event-times-{{ forloop.counter0 }}" x-ref="eventTimes">
                                         {{ event_date_form.eventtime_formset.management_form }}
                                         {% for time_form in event_date_form.eventtime_formset %}
                                             <div class="event-time-form mb-3 p-3 bg-gray-50 dark:bg-gray-800 rounded">
@@ -102,20 +102,13 @@
                                                             <span class="ml-2 text-red-600">{% translate "Delete this time" %}</span>
                                                         </label>
                                                     </div>
-                                                {% else %}
-                                                    <div class="flex justify-end">
-                                                        <button type="button" class="text-red-600 hover:text-red-800 remove-time">{% translate "Remove" %}</button>
-                                                    </div>
                                                 {% endif %}
                                             </div>
                                         {% endfor %}
                                     </div>
                                     <button type="button"
                                             class="mt-2 px-3 py-2 text-xs font-medium text-center text-white bg-green-700 rounded-lg hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
-                                            hx-get="{% url 'add_event_time_form' %}"
-                                            hx-target="#event-times-{{ forloop.counter0 }}"
-                                            hx-swap="beforeend"
-                                            hx-vals='{"date_index": "{{ forloop.counter0 }}"}'>
+                                            @click="addEventTime({{ forloop.counter0 }})">
                                         {% translate "Add event time" %}
                                     </button>
                                 </div>
@@ -125,10 +118,7 @@
                     <button type="button"
                             id="add-event-date"
                             class="px-3 py-2 text-xs font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-6"
-                            hx-get="{% url 'add_event_date_form' %}"
-                            hx-target="#event-dates"
-                            hx-swap="beforeend"
-                            hx-vals='{"index": "{{ eventdate_formset.total_form_count }}"}'>
+                            @click="addEventDate">
                         {% translate "Add event date" %}
                     </button>
                     <div class="flex justify-center pt-8">
@@ -148,45 +138,136 @@
 {% endblock body %}
 {% block scripts %}
     <script>
-        document.body.addEventListener('htmx:configRequest', (event) => {
-            event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
-        });
-        
-        // Handle removing event time forms that don't have a DELETE checkbox
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('remove-time')) {
-                const timeForm = e.target.closest('.event-time-form');
-                if (timeForm) {
-                    timeForm.remove();
-                    updateFormsetCount();
+        function eventForm() {
+            return {
+                addEventDate() {
+                    const index = this.$refs.eventDates.children.length - 1;
+                    const newForm = document.createElement('div');
+                    newForm.innerHTML = `
+                        <div class="event-date-form mb-4 p-4 border border-gray-300 rounded-lg" x-data="eventDateForm(${index})">
+                            <input type="hidden" name="event_dates-${index}-id" id="id_event_dates-${index}-id">
+                            <input type="hidden" name="event_dates-${index}-event" id="id_event_dates-${index}-event">
+                            <div class="grid sm:grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="mb-2">
+                                    <label for="id_event_dates-${index}-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        Date
+                                    </label>
+                                    <input type="date" name="event_dates-${index}-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="id_event_dates-${index}-date">
+                                </div>
+                            </div>
+                            <div class="mt-4 border-t pt-4">
+                                <h4 class="text-md font-medium mb-2">Event Times</h4>
+                                <div class="event-times" id="event-times-${index}" x-ref="eventTimes">
+                                    <input type="hidden" name="time_${index}-TOTAL_FORMS" value="0" id="id_time_${index}-TOTAL_FORMS">
+                                    <input type="hidden" name="time_${index}-INITIAL_FORMS" value="0" id="id_time_${index}-INITIAL_FORMS">
+                                    <input type="hidden" name="time_${index}-MIN_NUM_FORMS" value="0" id="id_time_${index}-MIN_NUM_FORMS">
+                                    <input type="hidden" name="time_${index}-MAX_NUM_FORMS" value="1000" id="id_time_${index}-MAX_NUM_FORMS">
+                                </div>
+                                <button type="button"
+                                        class="mt-2 px-3 py-2 text-xs font-medium text-center text-white bg-green-700 rounded-lg hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
+                                        @click="addEventTime(${index})">
+                                    Add event time
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    this.$refs.eventDates.appendChild(newForm);
+                    this.updateFormsetCount();
+                },
+                addEventTime(dateIndex) {
+                    const timeFormset = this.$refs.eventDates.querySelector(`#event-times-${dateIndex}`);
+                    const index = timeFormset.querySelectorAll('.event-time-form').length;
+                    const newForm = document.createElement('div');
+                    newForm.innerHTML = `
+                        <div class="event-time-form mb-3 p-3 bg-gray-50 dark:bg-gray-800 rounded">
+                            <input type="hidden" name="time_${dateIndex}-${index}-id" id="id_time_${dateIndex}-${index}-id">
+                            <input type="hidden" name="time_${dateIndex}-${index}-event_date" id="id_time_${dateIndex}-${index}-event_date">
+                            <div class="grid sm:grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="mb-2">
+                                    <label for="id_time_${dateIndex}-${index}-time" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        Time
+                                    </label>
+                                    <input type="time" name="time_${dateIndex}-${index}-time" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="id_time_${dateIndex}-${index}-time">
+                                </div>
+                                <div class="mb-2">
+                                    <label for="id_time_${dateIndex}-${index}-maxSubscribers" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        Max Subscribers
+                                    </label>
+                                    <input type="number" name="time_${dateIndex}-${index}-maxSubscribers" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="id_time_${dateIndex}-${index}-maxSubscribers" value="6">
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    timeFormset.appendChild(newForm);
+                    this.updateFormsetCount();
+                },
+                updateFormsetCount() {
+                    const dateFormset = this.$refs.eventDates;
+                    const dateTotalForms = dateFormset.querySelector('[name="event_dates-TOTAL_FORMS"]');
+                    const dateForms = dateFormset.querySelectorAll('.event-date-form');
+                    dateTotalForms.value = dateForms.length;
+
+                    dateForms.forEach((dateForm, dateIndex) => {
+                        const timeFormset = dateForm.querySelector(`#event-times-${dateIndex}`);
+                        if (timeFormset) {
+                            const timeTotalForms = timeFormset.querySelector(`[name="time_${dateIndex}-TOTAL_FORMS"]`);
+                            const timeForms = timeFormset.querySelectorAll('.event-time-form');
+                            if (timeTotalForms) {
+                                timeTotalForms.value = timeForms.length;
+                            }
+                        }
+                    });
                 }
             }
-        });
-        
-        // Update management form counts after adding/removing forms
-        function updateFormsetCount() {
-            // Update event dates count
-            const dateFormset = document.querySelector('#event-dates');
-            const dateTotalForms = dateFormset.querySelector('[name="eventdate_set-TOTAL_FORMS"]');
-            const dateForms = dateFormset.querySelectorAll('.event-date-form');
-            dateTotalForms.value = dateForms.length;
-            
-            // Update event times count for each date
-            dateForms.forEach((dateForm, dateIndex) => {
-                const timeFormset = document.querySelector(`#event-times-${dateIndex}`);
-                if (timeFormset) {
-                    const timeTotalForms = timeFormset.querySelector(`[name="time_${dateIndex}-TOTAL_FORMS"]`);
-                    const timeForms = timeFormset.querySelectorAll('.event-time-form');
-                    if (timeTotalForms) {
-                        timeTotalForms.value = timeForms.length;
-                    }
-                }
-            });
         }
-        
-        // After HTMX adds a new form
-        document.body.addEventListener('htmx:afterSwap', function(event) {
-            updateFormsetCount();
-        });
+
+        function eventDateForm(index) {
+            return {
+                addEventTime() {
+                    const timeFormset = this.$refs.eventTimes;
+                    const index = timeFormset.querySelectorAll('.event-time-form').length;
+                    const newForm = document.createElement('div');
+                    newForm.innerHTML = `
+                        <div class="event-time-form mb-3 p-3 bg-gray-50 dark:bg-gray-800 rounded">
+                            <input type="hidden" name="time_${index}-${index}-id" id="id_time_${index}-${index}-id">
+                            <input type="hidden" name="time_${index}-${index}-event_date" id="id_time_${index}-${index}-event_date">
+                            <div class="grid sm:grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="mb-2">
+                                    <label for="id_time_${index}-${index}-time" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        Time
+                                    </label>
+                                    <input type="time" name="time_${index}-${index}-time" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="id_time_${index}-${index}-time">
+                                </div>
+                                <div class="mb-2">
+                                    <label for="id_time_${index}-${index}-maxSubscribers" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        Max Subscribers
+                                    </label>
+                                    <input type="number" name="time_${index}-${index}-maxSubscribers" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="id_time_${index}-${index}-maxSubscribers" value="6">
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    timeFormset.appendChild(newForm);
+                    this.updateFormsetCount();
+                },
+                updateFormsetCount() {
+                    const dateFormset = this.$refs.eventDates;
+                    const dateTotalForms = dateFormset.querySelector('[name="event_dates-TOTAL_FORMS"]');
+                    const dateForms = dateFormset.querySelectorAll('.event-date-form');
+                    dateTotalForms.value = dateForms.length;
+
+                    dateForms.forEach((dateForm, dateIndex) => {
+                        const timeFormset = dateForm.querySelector(`#event-times-${dateIndex}`);
+                        if (timeFormset) {
+                            const timeTotalForms = timeFormset.querySelector(`[name="time_${dateIndex}-TOTAL_FORMS"]`);
+                            const timeForms = timeFormset.querySelectorAll('.event-time-form');
+                            if (timeTotalForms) {
+                                timeTotalForms.value = timeForms.length;
+                            }
+                        }
+                    });
+                }
+            }
+        }
     </script>
 {% endblock scripts %}

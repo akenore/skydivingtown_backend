@@ -22,8 +22,5 @@ urlpatterns = [
          path('search/', EventOptionListView.as_view(), name='search_option'),
          ])),
     path('myadmin/events/<int:event_pk>/export/<str:export_type>/', ExportSubscribersView.as_view(), name='export_subscribers'),
-    path('add-event-date/', add_event_date_form, name='add_event_date_form'),
-    path('add-event-time/', add_event_time_form, name='add_event_time_form'),
-    path('remove-event-date/<int:pk>/', remove_event_date_form, name='remove_event_date_form'),
-    path('remove-event-time/<int:pk>/', remove_event_time_form, name='remove_event_time_form'),
+    
 ]
