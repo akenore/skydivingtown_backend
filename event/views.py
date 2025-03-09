@@ -212,7 +212,7 @@ class EventDetailView(LoginRequiredMixin, SuccessMessageMixin, DetailView):
             self.template_name = "event/partial/data_subscribers.html"
         return super().render_to_response(context, **response_kwargs)
 
-
+#Event Subscribers
 class SubscriberCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Subscriber
     form_class = SubscriberForm
@@ -301,7 +301,7 @@ class EventOptionDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView)
         messages.warning(self.request, self.success_message)
         return super(EventDeleteView, self).delete(request, *args, **kwargs)
 
-
+# Exportation
 class ExportSubscribersView(View):
     def get(self, request, event_pk, export_type):
         event = get_object_or_404(Event, pk=event_pk)

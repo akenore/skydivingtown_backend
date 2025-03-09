@@ -39,8 +39,21 @@ class EventAdmin(NestedModelAdmin):
 
         dates_to_delete = existing_dates - new_dates
         if dates_to_delete:
-            EventDate.objects.filter(
-                event=obj, date__in=dates_to_delete).delete()
+            # Check if any EventDate being deleted has related Subscribers or EventTimes
+            for date in dates_to_delete:
+                event_date = EventDate.objects.filter(event=obj, date=date).first()
+                if event_date:
+                    # Check if there are Subscribers or EventTimes referencing this EventDate
+                    if event_date.subscribers.exists() or event_date.event_times.exists():
+                        # Prevent deletion and show a warning
+                        self.message_user(
+                            request,
+                            f"Cannot delete EventDate {event_date.date} because it has related Subscribers or EventTimes.",
+                            level='error',
+                        )
+                    else:
+                        # Safe to delete
+                        event_date.delete()
 
 
 class EventOptionAdmin(admin.ModelAdmin):
@@ -51,4 +64,3 @@ admin.site.register(Event, EventAdmin)
 admin.site.register(EventOption, EventOptionAdmin)
 admin.site.register(Subscriber)
 admin.site.register(Payment)
-# admin.site.register(EventTime)

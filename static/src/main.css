@@ -431,6 +431,9 @@
   .ml-5 {
     margin-left: calc(var(--spacing) * 5);
   }
+  .ml-8 {
+    margin-left: calc(var(--spacing) * 8);
+  }
   .\!hidden {
     display: none !important;
   }
@@ -786,6 +789,9 @@
   .bg-blue-50 {
     background-color: var(--color-blue-50);
   }
+  .bg-blue-500 {
+    background-color: var(--color-blue-500);
+  }
   .bg-blue-700 {
     background-color: var(--color-blue-700);
   }
@@ -806,6 +812,9 @@
   }
   .bg-green-700 {
     background-color: var(--color-green-700);
+  }
+  .bg-purple-600 {
+    background-color: var(--color-purple-600);
   }
   .bg-red-50 {
     background-color: var(--color-red-50);

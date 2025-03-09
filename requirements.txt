@@ -58,3 +58,5 @@ openpyxl
 reportlab
 pandas
 django-birthday
+requests
+sib-api-v3-sdk

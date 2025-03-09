@@ -1,6 +1,6 @@
 import graphene
 from graphene_django import DjangoObjectType
-from django.db.models import Count, F
+from django.db.models import Count
 from event.models import Event, Subscriber, EventDate, EventTime, EventOption
 from django_countries import countries
 import sib_api_v3_sdk
@@ -14,9 +14,9 @@ class EventType(DjangoObjectType):
         fields = "__all__"
 
 
-class SubscriberType(DjangoObjectType):
+class EventOptionType(DjangoObjectType):
     class Meta:
-        model = Subscriber
+        model = EventOption
         fields = "__all__"
 
 
@@ -25,34 +25,29 @@ class EventDateType(DjangoObjectType):
         model = EventDate
         fields = "__all__"
 
-    event_times = graphene.List(lambda: EventTimeType)
-
-    def resolve_event_times(self, info):
-        return self.event_times.all().order_by('time')
-
 
 class EventTimeType(DjangoObjectType):
-    class Meta:
-        model = EventTime
-        fields = "__all__"
-
     current_subscriber_count = graphene.Int()
     available_slots = graphene.Int()
     is_full = graphene.Boolean()
 
-    def resolve_current_subscriber_count(self, info):
-        return self.current_subscriber_count
-
-    def resolve_available_slots(self, info):
-        return self.get_available_slots()
-
-    def resolve_is_full(self, info):
-        return self.is_full()
-
-
-class EventOptionType(DjangoObjectType):
     class Meta:
-        model = EventOption
+        model = EventTime
+        fields = "__all__"
+
+    def resolve_current_subscriber_count(root, info):
+        return root.current_subscriber_count
+
+    def resolve_available_slots(root, info):
+        return root.get_available_slots()
+
+    def resolve_is_full(root, info):
+        return root.is_full()
+
+
+class SubscriberType(DjangoObjectType):
+    class Meta:
+        model = Subscriber
         fields = "__all__"
 
 
@@ -63,8 +58,8 @@ class CountryType(graphene.ObjectType):
 
 class Query(graphene.ObjectType):
     all_events = graphene.List(EventType)
-    all_event_dates = graphene.List(
-        EventDateType, event_id=graphene.ID(required=True))
+    all_event_dates = graphene.List(EventDateType, event_id=graphene.ID(required=True))
+    all_event_times = graphene.List(EventTimeType, event_date_id=graphene.ID(required=True))
     all_subscribers = graphene.List(SubscriberType)
     all_countries = graphene.List(CountryType)
 
@@ -73,6 +68,9 @@ class Query(graphene.ObjectType):
 
     def resolve_all_event_dates(root, info, event_id):
         return EventDate.objects.filter(event_id=event_id)
+
+    def resolve_all_event_times(root, info, event_date_id):
+        return EventTime.objects.filter(event_date_id=event_date_id)
 
     def resolve_all_subscribers(root, info):
         return Subscriber.objects.all()
@@ -100,12 +98,14 @@ class CreateSubscriber(graphene.Mutation):
 
     def mutate(self, info, event_time_id, name, surname, email, phone, birth_date, gender, altitude, skydiver_option, country, region, options):
         event_time = EventTime.objects.get(pk=event_time_id)
+
+        # Check if the event time is already full
         if event_time.is_full():
-            raise graphene.GraphQLError("This event time is full.")
+            raise Exception("This event time is already full.")
 
         subscriber = Subscriber(
-            eventTime=event_time,
             eventDate=event_time.event_date,
+            eventTime=event_time,
             name=name,
             surname=surname,
             email=email,
@@ -117,23 +117,21 @@ class CreateSubscriber(graphene.Mutation):
             country=country,
             region=region
         )
-        subscriber.full_clean()
         subscriber.save()
 
+        # Add selected options if provided
         if options:
             event_options = EventOption.objects.filter(name__in=options)
             subscriber.options.set(event_options)
 
-        # Brevo API integration
+        # Send data to Brevo
         configuration = sib_api_v3_sdk.Configuration()
         configuration.api_key['api-key'] = settings.BREVO_API_KEY
-        api_instance = sib_api_v3_sdk.ContactsApi(
-            sib_api_v3_sdk.ApiClient(configuration))
+        api_instance = sib_api_v3_sdk.ContactsApi(sib_api_v3_sdk.ApiClient(configuration))
         contact = sib_api_v3_sdk.CreateContact(
             email=email,
-            update_enabled = True,
             attributes={"FNAME": name, "LNAME": surname, "SMS": phone},
-            list_ids=[2]
+            list_ids=[settings.BREVO_LIST_ID]
         )
         try:
             api_instance.create_contact(contact)
