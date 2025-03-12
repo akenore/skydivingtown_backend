@@ -45,7 +45,7 @@ class EventAdmin(NestedModelAdmin):
                     if event_date.subscribers.exists() or event_date.event_times.exists():
                         self.message_user(
                             request,
-                            f"Cannot delete EventDate {event_date.date} because it has related Subscribers or EventTimes.",
+                            f"Cannot delete EventDate {event_date.date} because it has related Subscribers.",
                             level='error',
                         )
                     else:
