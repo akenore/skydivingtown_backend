@@ -1,3 +1,5 @@
+from contract.forms import CompanyPublicForm, CompanyUpdateForm
+from contract.models import Company
 from datetime import datetime
 from django.conf import settings
 from django.shortcuts import render
@@ -11,22 +13,14 @@ from django.contrib import messages
 from django.core.mail import EmailMultiAlternatives
 from django.db.models import Q
 from django.template.loader import get_template
-import sib_api_v3_sdk
-from sib_api_v3_sdk.rest import ApiException
+import requests
 import logging
-import phonenumbers
-from phonenumbers import NumberParseException
+
 logger = logging.getLogger(__name__)
 
-from contract.models import Company
-from contract.forms import CompanyPublicForm, CompanyUpdateForm
 
 from_email = settings.DEFAULT_FROM_EMAIL
 admin_emails = settings.ADMIN_LIST_EMAILS
-configuration = sib_api_v3_sdk.Configuration()
-configuration.api_key['api-key'] = settings.BREVO_API_KEY
-api_instance = sib_api_v3_sdk.CompaniesApi(sib_api_v3_sdk.ApiClient(configuration))
-
 
 
 class CompanyCreateView(SuccessMessageMixin, CreateView):
@@ -83,39 +77,41 @@ class CompanyCreateView(SuccessMessageMixin, CreateView):
         # admin_send.attach_alternative(admin_message_html, "text/html")
         # admin_send.send()
 
-        full_phone = f"{form.instance.countryCode}{form.instance.phone}"
         try:
-            parsed = phonenumbers.parse(form.instance.countryCode, None)
-            iso_code = phonenumbers.region_code_for_country_code(parsed.country_code)
-        except NumberParseException as e:
-            messages.error(self.request, _("Invalid country code: ") + str(e))
-            return response
-        except Exception as e:
-            messages.error(self.request, _("Error determining country code."))
+            country_code_number = int(form.instance.countryCode.lstrip('+'))
+        except (ValueError, IndexError) as e:
+            messages.error(self.request, _("Invalid country code format"))
             return response
 
-        
+        api_key = settings.BREVO_API_KEY
+        api_company_url = "https://api.brevo.com/v3/companies"
 
-        body = sib_api_v3_sdk.Body(
-            name=form.instance.name,
-            attributes={
+        payload = {
+            "attributes": {
                 "email": form.instance.email,
-                "phone_number": form.instance.countryCode,
-                "ref": form.instance.ref
+                "ref": form.instance.ref,
+                "phone_number": form.instance.phone,
             },
-            country_code=iso_code
-        )
+            "name": form.instance.name,
+            "countryCode": country_code_number,
+        }
+
+        headers = {
+            "accept": "application/json",
+            "content-type": "application/json",
+            "api-key": api_key
+        }
 
         try:
-            api_response = api_instance.companies_post(body)
-            logger.info(f"Brevo API Response: {api_response}")
-        except ApiException as e:
-            logger.error(f"Brevo API Error: {e}")
-            messages.error(
-                self.request,
-                _("Failed to create company in Brevo. Please contact support.")
+            brevo_response = requests.post(
+                api_company_url,
+                json=payload,
+                headers=headers
             )
-
+            brevo_response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            messages.error(self.request, _("Brevo API Error: ") + str(e))
+            logger.error(f"Brevo API Failure: {str(e)}")
         return response
 
 
