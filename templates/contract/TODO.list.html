@@ -1,0 +1,75 @@
+{% extends "public/secure/components/base.html" %}
+{% load static i18n %}
+{% block head %}
+     <script src="https://cdn.jsdelivr.net/npm/simple-datatables@9.0.3"></script>
+{% endblock head %}
+{% block title %}
+     {% translate "Companies" %}
+{% endblock title %}
+{% block nav %}
+     {% include "public/secure/components/header.html" %}
+{% endblock nav %}
+{% block aside %}
+     {% include "public/secure/components/sidebar.html" %}
+{% endblock aside %}
+{% block body %}
+     <div class="md:p-4 sm:ml-64">
+          <div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10 dark:text-gray-300">
+               <div class="relative overflow-x-auto shadow-md sm:rounded-lg p-8">
+                    <div class="flex items-center justify-between flex-column md:flex-row flex-wrap space-y-4 md:space-y-0 py-4 bg-white dark:bg-gray-900">
+                         <div>
+                              <a href="{% url 'add_company' %}"
+                                 class="text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-500 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700">{% translate "Add New company" %}</a>
+                         </div>
+                    </div>
+                    <table id="search-table"
+                           class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                              <tr>
+                                   <th scope="col" class="p-4">
+                                        <div class="flex items-center">{% translate "Ref" %}</div>
+                                   </th>
+                                   <th scope="col" class="px-6 py-3">{% translate "Company" %}</th>
+                                   <th scope="col" class="px-6 py-3 flex items-center">
+                                        {% translate "Discount" %}
+                                        <svg class="ml-2 w-6 h-6 text-gray-800 dark:text-white"
+                                             aria-hidden="true"
+                                             xmlns="http://www.w3.org/2000/svg"
+                                             width="24"
+                                             height="24"
+                                             fill="none"
+                                             viewBox="0 0 24 24">
+                                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.891 15.107 15.11 8.89m-5.183-.52h.01m3.089 7.254h.01M14.08 3.902a2.849 2.849 0 0 0 2.176.902 2.845 2.845 0 0 1 2.94 2.94 2.849 2.849 0 0 0 .901 2.176 2.847 2.847 0 0 1 0 4.16 2.848 2.848 0 0 0-.901 2.175 2.843 2.843 0 0 1-2.94 2.94 2.848 2.848 0 0 0-2.176.902 2.847 2.847 0 0 1-4.16 0 2.85 2.85 0 0 0-2.176-.902 2.845 2.845 0 0 1-2.94-2.94 2.848 2.848 0 0 0-.901-2.176 2.848 2.848 0 0 1 0-4.16 2.849 2.849 0 0 0 .901-2.176 2.845 2.845 0 0 1 2.941-2.94 2.849 2.849 0 0 0 2.176-.901 2.847 2.847 0 0 1 4.159 0Z" />
+                                        </svg>
+                                   </th>
+                                   <th scope="col" class="px-6 py-3">{% translate "Status" %}</th>
+                                   <th scope="col" class="px-6 py-3"></th>
+                              </tr>
+                         </thead>
+                         <tbody id="company-list">
+                              {% include "contract/partial/data.html" %}
+                         </tbody>
+                    </table>
+               </div>
+          </div>
+     </div>
+{% endblock body %}
+{% block scripts %}
+     <script>
+          if (document.getElementById("search-table") && typeof simpleDatatables.DataTable !== 'undefined') {
+               const dataTable = new simpleDatatables.DataTable("#search-table", {
+                   searchable: true,
+                   sortable: false,
+                   locale: "fr-FR",
+               });
+           }
+           document.querySelector('.datatable-input').classList.add(
+               'block', 'p-2', 'ps-10', 'text-sm', 'text-gray-900', 
+               'border', 'border-gray-300', 'rounded-lg', 'w-80', 'bg-gray-50', 
+               'focus:ring-blue-500', 'focus:border-blue-500', 'dark:bg-gray-700', 
+               'dark:border-gray-600', 'dark:placeholder-gray-400', 'dark:text-white', 
+               'dark:focus:ring-blue-500', 'dark:focus:border-blue-500'
+               );
+
+     </script>
+{% endblock scripts %}

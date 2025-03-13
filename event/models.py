@@ -7,6 +7,7 @@ from django.core.validators import RegexValidator
 from django.utils.translation import gettext as _
 from birthday import BirthdayField, BirthdayManager
 
+
 class EventOption(models.Model):
     name = models.CharField(_("Option name"), max_length=100)
     amount = models.DecimalField(_("Price"), max_digits=10, decimal_places=2)
@@ -25,7 +26,8 @@ class Event(models.Model):
     name = models.CharField(_("Event name"), max_length=100)
     slug = AutoSlugField(populate_from='name', unique=True)
     published = models.DateTimeField(auto_now_add=True)
-    options = models.ManyToManyField(EventOption, verbose_name=_("Event Options"), blank=True)
+    options = models.ManyToManyField(
+        EventOption, verbose_name=_("Event Options"), blank=True)
     amount = models.DecimalField(_("Price"), max_digits=10, decimal_places=2)
     description = models.TextField(_("Description"), blank=True, null=True)
 
@@ -38,7 +40,8 @@ class Event(models.Model):
 
 
 class EventDate(models.Model):
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='event_dates')
+    event = models.ForeignKey(
+        Event, on_delete=models.CASCADE, related_name='event_dates')
     date = models.DateField(_("Event date"))
 
     class Meta:
@@ -50,16 +53,19 @@ class EventDate(models.Model):
 
 
 class EventTime(models.Model):
-    event_date = models.ForeignKey(EventDate, on_delete=models.CASCADE, related_name='event_times')
+    event_date = models.ForeignKey(
+        EventDate, on_delete=models.CASCADE, related_name='event_times')
     time = models.TimeField(_("Event time"))
-    maxSubscribers = models.PositiveIntegerField(_("Max number of subscribers"), default=6)
+    maxSubscribers = models.PositiveIntegerField(
+        _("Max number of subscribers"), default=6)
 
     class Meta:
         verbose_name = _("Event Time")
         verbose_name_plural = _("Event Times")
         ordering = ['time']
         constraints = [
-            models.UniqueConstraint(fields=['event_date', 'time'], name='unique_event_time')
+            models.UniqueConstraint(
+                fields=['event_date', 'time'], name='unique_event_time')
         ]
 
     def clean(self):
@@ -118,18 +124,21 @@ class Subscriber(models.Model):
     email = models.EmailField(_("Email"))
     name = models.CharField(_("First Name"), max_length=100)
     surname = models.CharField(_("Last name"), max_length=100)
-    phone = models.CharField(_("Phone"), validators=[phone_regex], max_length=17, blank=True)
+    phone = models.CharField(_("Phone"), validators=[
+                             phone_regex], max_length=17, blank=True)
     birthDate = BirthdayField(_("Birth Date"))
     country = CountryField(blank_label=_("(Select country)"))
     region = models.CharField(_("City"), max_length=100)
-    gender = models.CharField(_("Gender"), max_length=1, choices=GENDER_CHOICES, default='M')
+    gender = models.CharField(
+        _("Gender"), max_length=1, choices=GENDER_CHOICES, default='M')
     altitude = models.CharField(
         _("At what altitude would you like to jump from a plane?"), max_length=5, choices=ALTITUDE_CHOICES, default='3400'
     )
     skydiverOption = models.CharField(
         _("Are you a skydiver?"), max_length=12, choices=SKYDIVER_OPTIONS, default='tandem'
     )
-    options = models.ManyToManyField(EventOption, verbose_name=_("Selected Options"), blank=True)
+    options = models.ManyToManyField(
+        EventOption, verbose_name=_("Selected Options"), blank=True)
 
     class Meta:
         verbose_name = _("Subscriber")
@@ -140,7 +149,8 @@ class Subscriber(models.Model):
 
 
 class Payment(models.Model):
-    subscriber = models.ForeignKey(Subscriber, on_delete=models.CASCADE, related_name='payments')
+    subscriber = models.ForeignKey(
+        Subscriber, on_delete=models.CASCADE, related_name='payments')
     amount = models.DecimalField(_("Total Amount"), max_digits=10, decimal_places=2)
 
     class Meta:
@@ -152,7 +162,8 @@ class Payment(models.Model):
 
     def calculate_total_amount(self):
         event_price = self.subscriber.eventDate.event.amount
-        options_total = sum(option.amount for option in self.subscriber.options.all()) if self.subscriber.options.exists() else 0
+        options_total = sum(option.amount for option in self.subscriber.options.all(
+        )) if self.subscriber.options.exists() else 0
         return event_price + options_total
 
     def save(self, *args, **kwargs):
